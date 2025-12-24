@@ -2,15 +2,24 @@
 
 import { useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
-import { SMELTING_ACTIONS, FORGING_ACTIONS } from '@/data/skills/smithing';
+import { SMITHING_ACTIONS } from '@/data/skills/smithing';
 import { getItem } from '@/data/resources';
 import { levelForXp, xpForLevel, formatXp, xpProgress } from '@/lib/experience';
 import { SkillingActionDefinition } from '@/types/game';
 
-type Tab = 'smelting' | 'forging';
+const SKILL_COLOR = 'var(--skill-smithing)';
+
+type SmithingCategory = 'smelting' | 'forging' | 'arrowheads';
+
+const CATEGORIES: { id: SmithingCategory; name: string; icon: string }[] = [
+  { id: 'smelting', name: 'Smelting', icon: '🔥' },
+  { id: 'forging', name: 'Forging', icon: '🔨' },
+  { id: 'arrowheads', name: 'Arrowheads', icon: '🏹' },
+];
 
 export default function SmithingPage() {
-  const [activeTab, setActiveTab] = useState<Tab>('smelting');
+  const [category, setCategory] = useState<SmithingCategory>('smelting');
+
   const skills = useGameStore((state) => state.skills);
   const inventory = useGameStore((state) => state.inventory);
   const currentAction = useGameStore((state) => state.currentAction);
@@ -28,9 +37,9 @@ export default function SmithingPage() {
     ? currentAction.elapsedMs / currentAction.duration
     : 0;
 
-  const actions = activeTab === 'smelting' ? SMELTING_ACTIONS : FORGING_ACTIONS;
+  const filteredActions = SMITHING_ACTIONS.filter((a) => a.category === category);
 
-  const canCraft = (action: SkillingActionDefinition): boolean => {
+  const canSmith = (action: SkillingActionDefinition): boolean => {
     if (currentLevel < action.levelRequired) return false;
     if (!action.inputItems) return true;
     return action.inputItems.every(
@@ -39,7 +48,7 @@ export default function SmithingPage() {
   };
 
   const handleActionClick = (actionId: string) => {
-    const action = actions.find((a) => a.id === actionId);
+    const action = SMITHING_ACTIONS.find((a) => a.id === actionId);
     if (!action) return;
 
     if (activeActionId === actionId) {
@@ -47,90 +56,103 @@ export default function SmithingPage() {
       return;
     }
 
-    if (!canCraft(action)) return;
+    if (!canSmith(action)) return;
     startAction(action);
   };
 
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-          Smithing
-        </h1>
-        <div className="mt-2 flex items-center gap-4">
-          <span className="text-lg font-medium text-zinc-700 dark:text-zinc-300">
-            Level {currentLevel}
-          </span>
-          <span className="text-sm text-zinc-500 dark:text-zinc-400">
-            {formatXp(smithingXp)} / {formatXp(nextLevelXp)} XP
-          </span>
-        </div>
-        <div className="mt-2 h-2 w-64 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
+    <div className="max-w-4xl">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-4 mb-4">
           <div
-            className="h-full bg-orange-500 transition-all duration-200"
-            style={{ width: `${progress * 100}%` }}
+            className="skill-icon"
+            style={{ background: `${SKILL_COLOR}15` }}
+          >
+            <span className="animate-float">🔨</span>
+          </div>
+          <div>
+            <h1 className="font-[var(--font-cinzel)] text-3xl font-bold text-gradient">
+              Smithing
+            </h1>
+            <div className="flex items-center gap-3 mt-1">
+              <span
+                className="text-2xl font-bold"
+                style={{ color: SKILL_COLOR }}
+              >
+                Level {currentLevel}
+              </span>
+              <span className="text-[var(--text-muted)]">•</span>
+              <span className="text-[var(--text-secondary)]">
+                {formatXp(smithingXp)} / {formatXp(nextLevelXp)} XP
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="progress-bar progress-bar-lg w-80">
+          <div
+            className="progress-fill"
+            style={{
+              width: `${progress * 100}%`,
+              background: `linear-gradient(90deg, ${SKILL_COLOR}80, ${SKILL_COLOR})`,
+            }}
           />
+        </div>
+        <div className="mt-1 text-xs text-[var(--text-muted)]">
+          {formatXp(nextLevelXp - smithingXp)} XP to level {currentLevel + 1}
         </div>
       </div>
 
+      {/* Current Action Banner */}
       {isSmithing && (
-        <div className="mb-6 rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-900 dark:bg-orange-950">
-          <div className="flex items-center justify-between">
+        <div className="action-banner mb-6 animate-fade-in">
+          <div className="flex items-center justify-between mb-3">
             <div>
-              <span className="text-sm text-orange-700 dark:text-orange-300">
-                Currently smithing
-              </span>
-              <div className="font-medium text-orange-900 dark:text-orange-100">
-                {[...SMELTING_ACTIONS, ...FORGING_ACTIONS].find(
-                  (a) => a.id === activeActionId
-                )?.name}
+              <div className="text-sm text-[var(--text-muted)]">Currently Smithing</div>
+              <div className="text-lg font-semibold text-[var(--accent-gold)]">
+                {SMITHING_ACTIONS.find((a) => a.id === activeActionId)?.name}
               </div>
             </div>
-            <button
-              onClick={stopAction}
-              className="rounded-md bg-red-100 px-3 py-1 text-sm font-medium text-red-700 hover:bg-red-200 dark:bg-red-900 dark:text-red-100 dark:hover:bg-red-800"
-            >
+            <button onClick={stopAction} className="btn btn-danger">
               Stop
             </button>
           </div>
-          <div className="mt-3 h-3 overflow-hidden rounded-full bg-orange-200 dark:bg-orange-800">
+          <div className="progress-bar progress-bar-lg">
             <div
-              className="h-full bg-orange-500 transition-all duration-100"
-              style={{ width: `${actionProgress * 100}%` }}
+              className="progress-fill"
+              style={{
+                width: `${actionProgress * 100}%`,
+                background: `linear-gradient(90deg, ${SKILL_COLOR}80, ${SKILL_COLOR})`,
+              }}
             />
           </div>
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="mb-4 flex gap-2">
-        <button
-          onClick={() => setActiveTab('smelting')}
-          className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === 'smelting'
-              ? 'bg-orange-500 text-white'
-              : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
-          }`}
-        >
-          Smelting
-        </button>
-        <button
-          onClick={() => setActiveTab('forging')}
-          className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === 'forging'
-              ? 'bg-orange-500 text-white'
-              : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
-          }`}
-        >
-          Forging
-        </button>
+      {/* Category Tabs */}
+      <div className="tab-group mb-6 w-fit">
+        {CATEGORIES.map((cat) => (
+          <button
+            key={cat.id}
+            onClick={() => setCategory(cat.id)}
+            className={`tab ${category === cat.id ? 'tab-active' : ''}`}
+          >
+            <span>{cat.icon}</span>
+            <span>{cat.name}</span>
+          </button>
+        ))}
       </div>
 
+      {/* Actions List */}
+      <div className="section-header">
+        <span className="section-title">{CATEGORIES.find((c) => c.id === category)?.name}</span>
+        <span className="section-line" />
+      </div>
       <div className="grid gap-3">
-        {actions.map((action) => {
+        {filteredActions.map((action, index) => {
           const isLocked = currentLevel < action.levelRequired;
           const isActive = activeActionId === action.id;
-          const hasMaterials = canCraft(action);
+          const hasMaterials = canSmith(action);
           const outputItem = action.itemProduced
             ? getItem(action.itemProduced.itemId)
             : null;
@@ -140,58 +162,57 @@ export default function SmithingPage() {
               key={action.id}
               onClick={() => handleActionClick(action.id)}
               disabled={isLocked || !hasMaterials}
-              className={`rounded-lg border p-4 text-left transition-colors ${
-                isActive
-                  ? 'border-orange-500 bg-orange-50 dark:border-orange-600 dark:bg-orange-950'
-                  : isLocked || !hasMaterials
-                    ? 'cursor-not-allowed border-zinc-200 bg-zinc-100 opacity-50 dark:border-zinc-800 dark:bg-zinc-900'
-                    : 'border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 dark:hover:bg-zinc-800'
-              }`}
+              className={`action-card opacity-0 animate-fade-in ${isActive ? 'action-card-active' : ''} ${isLocked || !hasMaterials ? 'opacity-40' : ''}`}
+              style={{
+                animationDelay: `${index * 0.05}s`,
+                animationFillMode: 'forwards',
+              }}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">🔨</span>
-                  <div>
-                    <div className="font-medium text-zinc-900 dark:text-zinc-100">
-                      {action.name}
-                    </div>
-                    <div className="text-sm text-zinc-500 dark:text-zinc-400">
-                      {isLocked
-                        ? `Requires level ${action.levelRequired}`
-                        : `${action.xp} XP • ${(action.baseTime / 1000).toFixed(1)}s`}
-                    </div>
-                  </div>
+              <div className="flex items-center gap-4 flex-1">
+                <div
+                  className="skill-icon"
+                  style={{ background: isActive ? `${SKILL_COLOR}20` : 'rgba(0,0,0,0.3)' }}
+                >
+                  {outputItem?.icon || '🔨'}
                 </div>
-                {outputItem && (
-                  <div className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
-                    <span>{outputItem.icon}</span>
-                    <span>{outputItem.name}</span>
+                <div className="flex-1">
+                  <div className="text-[var(--text-primary)] font-medium">
+                    {action.name}
                   </div>
-                )}
+                  <div className="text-sm text-[var(--text-muted)]">
+                    {isLocked
+                      ? `Requires level ${action.levelRequired}`
+                      : `${action.xp} XP • ${(action.baseTime / 1000).toFixed(1)}s`}
+                  </div>
+                  {action.inputItems && action.inputItems.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {action.inputItems.map((req) => {
+                        const item = getItem(req.itemId);
+                        const have = inventory[req.itemId] || 0;
+                        const hasEnough = have >= req.quantity;
+                        return (
+                          <span
+                            key={req.itemId}
+                            className={`badge ${hasEnough ? 'badge-success' : 'badge-error'}`}
+                          >
+                            <span>{item?.icon}</span>
+                            <span>{have}/{req.quantity}</span>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
-              {/* Input requirements */}
-              {action.inputItems && action.inputItems.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {action.inputItems.map((req) => {
-                    const item = getItem(req.itemId);
-                    const have = inventory[req.itemId] || 0;
-                    const hasEnough = have >= req.quantity;
-                    return (
-                      <span
-                        key={req.itemId}
-                        className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs ${
-                          hasEnough
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                            : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
-                        }`}
-                      >
-                        <span>{item?.icon}</span>
-                        <span>
-                          {have}/{req.quantity}
-                        </span>
-                      </span>
-                    );
-                  })}
+              {outputItem && action.itemProduced && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">{outputItem.icon}</span>
+                  <div className="text-right">
+                    <span className="text-sm text-[var(--text-secondary)]">{outputItem.name}</span>
+                    {action.itemProduced.quantity > 1 && (
+                      <span className="text-xs text-[var(--text-muted)]"> x{action.itemProduced.quantity}</span>
+                    )}
+                  </div>
                 </div>
               )}
             </button>

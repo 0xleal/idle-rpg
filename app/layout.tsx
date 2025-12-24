@@ -1,23 +1,20 @@
-import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+'use client';
+
+import { Cinzel, Inter } from 'next/font/google';
 import './globals.css';
 import { GameProvider } from '@/components/GameProvider';
 import { Sidebar } from '@/components/layout/Sidebar';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const cinzel = Cinzel({
+  variable: '--font-cinzel',
   subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
 });
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const inter = Inter({
+  variable: '--font-inter',
   subsets: ['latin'],
 });
-
-export const metadata: Metadata = {
-  title: 'Idle RPG',
-  description: 'A browser-based idle RPG inspired by Melvor Idle',
-};
 
 export default function RootLayout({
   children,
@@ -25,14 +22,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
-      >
+    <html lang="en" className="dark">
+      <head>
+        <title>Idle RPG</title>
+        <meta name="description" content="A browser-based idle RPG inspired by Melvor Idle" />
+      </head>
+      <body className={`${cinzel.variable} ${inter.variable} antialiased`}>
         <GameProvider>
           <div className="flex h-screen">
             <Sidebar />
-            <main className="flex-1 overflow-auto bg-white p-6 dark:bg-zinc-950">
+            <main className="flex-1 overflow-auto p-8">
               {children}
             </main>
           </div>

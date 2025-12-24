@@ -6,6 +6,19 @@ import { getEquipment } from '@/data/equipment';
 import { getItem } from '@/data/resources';
 import { levelForXp } from '@/lib/experience';
 
+const SLOT_ICONS: Record<EquipmentSlot, string> = {
+  head: '🪖',
+  body: '🦺',
+  legs: '👖',
+  boots: '👢',
+  gloves: '🧤',
+  cape: '🧣',
+  amulet: '📿',
+  ring: '💍',
+  weapon: '⚔️',
+  shield: '🛡️',
+};
+
 export default function EquipmentPage() {
   const equipment = useGameStore((state) => state.equipment);
   const inventory = useGameStore((state) => state.inventory);
@@ -74,19 +87,36 @@ export default function EquipmentPage() {
   };
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-6">
-        Equipment
-      </h1>
+    <div className="max-w-5xl">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-4 mb-4">
+          <div
+            className="skill-icon"
+            style={{ background: 'rgba(249, 115, 22, 0.15)' }}
+          >
+            <span className="animate-float">⚔️</span>
+          </div>
+          <div>
+            <h1 className="font-[var(--font-cinzel)] text-3xl font-bold text-gradient">
+              Equipment
+            </h1>
+            <p className="text-[var(--text-secondary)] mt-1">
+              Equip gear to boost your combat stats
+            </p>
+          </div>
+        </div>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Equipment Slots */}
-        <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-4">
-            Equipped Gear
-          </h2>
+        <div className="card p-5">
+          <div className="section-header mb-4">
+            <span className="section-title">Equipped Gear</span>
+            <span className="section-line" />
+          </div>
           <div className="grid grid-cols-2 gap-3">
-            {ALL_EQUIPMENT_SLOTS.map((slot) => {
+            {ALL_EQUIPMENT_SLOTS.map((slot, index) => {
               const itemId = equipment[slot];
               const equipDef = itemId ? getEquipment(itemId) : null;
               const itemDef = itemId ? getItem(itemId) : null;
@@ -96,43 +126,56 @@ export default function EquipmentPage() {
                   key={slot}
                   onClick={() => itemId && handleUnequip(slot)}
                   disabled={!itemId}
-                  className={`rounded-lg border p-3 text-left transition-colors ${
-                    itemId
-                      ? 'border-zinc-300 bg-zinc-50 hover:border-red-400 hover:bg-red-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:border-red-600 dark:hover:bg-red-950'
-                      : 'border-dashed border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900'
-                  }`}
+                  className={`equipment-slot opacity-0 animate-fade-in ${itemId ? 'equipment-slot-filled' : 'equipment-slot-empty'}`}
+                  style={{
+                    animationDelay: `${index * 0.03}s`,
+                    animationFillMode: 'forwards',
+                  }}
                 >
-                  <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">
-                    {SLOT_NAMES[slot]}
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-medium text-[var(--text-muted)]">
+                      {SLOT_NAMES[slot]}
+                    </span>
+                    <span className="text-sm opacity-50">{SLOT_ICONS[slot]}</span>
                   </div>
                   {itemId && equipDef && itemDef ? (
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="text-lg">{itemDef.icon}</span>
-                        <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                        <span className="text-sm font-medium text-[var(--text-primary)]">
                           {itemDef.name}
                         </span>
                       </div>
-                      <div className="mt-1 flex flex-wrap gap-1">
+                      <div className="mt-1.5 flex flex-wrap gap-1">
                         {equipDef.stats.attackBonus && (
-                          <span className="text-xs text-orange-600 dark:text-orange-400">
+                          <span className="stat-bonus stat-bonus-attack">
                             +{equipDef.stats.attackBonus} Atk
                           </span>
                         )}
                         {equipDef.stats.strengthBonus && (
-                          <span className="text-xs text-red-600 dark:text-red-400">
+                          <span className="stat-bonus stat-bonus-strength">
                             +{equipDef.stats.strengthBonus} Str
                           </span>
                         )}
                         {equipDef.stats.defenceBonus && (
-                          <span className="text-xs text-blue-600 dark:text-blue-400">
+                          <span className="stat-bonus stat-bonus-defence">
                             +{equipDef.stats.defenceBonus} Def
+                          </span>
+                        )}
+                        {equipDef.stats.rangedBonus && (
+                          <span className="stat-bonus stat-bonus-ranged">
+                            +{equipDef.stats.rangedBonus} Rng
+                          </span>
+                        )}
+                        {equipDef.stats.magicBonus && (
+                          <span className="stat-bonus stat-bonus-magic">
+                            +{equipDef.stats.magicBonus} Mag
                           </span>
                         )}
                       </div>
                     </div>
                   ) : (
-                    <div className="text-sm text-zinc-400 dark:text-zinc-600">
+                    <div className="text-sm text-[var(--text-muted)] italic">
                       Empty
                     </div>
                   )}
@@ -143,32 +186,33 @@ export default function EquipmentPage() {
         </div>
 
         {/* Stats Summary */}
-        <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-4">
-            Combat Stats
-          </h2>
+        <div className="card p-5">
+          <div className="section-header mb-4">
+            <span className="section-title">Combat Stats</span>
+            <span className="section-line" />
+          </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg bg-orange-50 p-3 dark:bg-orange-950">
-              <div className="text-xs text-orange-600 dark:text-orange-400">Attack Bonus</div>
-              <div className="text-2xl font-bold text-orange-700 dark:text-orange-300">
+            <div className="stat-block" style={{ background: 'rgba(249, 115, 22, 0.08)', borderColor: 'rgba(249, 115, 22, 0.2)' }}>
+              <div className="stat-label" style={{ color: '#fb923c' }}>Attack Bonus</div>
+              <div className="stat-value" style={{ color: '#fb923c' }}>
                 +{totalStats.attackBonus || 0}
               </div>
             </div>
-            <div className="rounded-lg bg-red-50 p-3 dark:bg-red-950">
-              <div className="text-xs text-red-600 dark:text-red-400">Strength Bonus</div>
-              <div className="text-2xl font-bold text-red-700 dark:text-red-300">
+            <div className="stat-block" style={{ background: 'rgba(220, 38, 38, 0.08)', borderColor: 'rgba(220, 38, 38, 0.2)' }}>
+              <div className="stat-label" style={{ color: '#f87171' }}>Strength Bonus</div>
+              <div className="stat-value" style={{ color: '#f87171' }}>
                 +{totalStats.strengthBonus || 0}
               </div>
             </div>
-            <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-950">
-              <div className="text-xs text-blue-600 dark:text-blue-400">Defence Bonus</div>
-              <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+            <div className="stat-block" style={{ background: 'rgba(59, 130, 246, 0.08)', borderColor: 'rgba(59, 130, 246, 0.2)' }}>
+              <div className="stat-label" style={{ color: '#60a5fa' }}>Defence Bonus</div>
+              <div className="stat-value" style={{ color: '#60a5fa' }}>
                 +{totalStats.defenceBonus || 0}
               </div>
             </div>
-            <div className="rounded-lg bg-green-50 p-3 dark:bg-green-950">
-              <div className="text-xs text-green-600 dark:text-green-400">Ranged Bonus</div>
-              <div className="text-2xl font-bold text-green-700 dark:text-green-300">
+            <div className="stat-block" style={{ background: 'rgba(132, 204, 22, 0.08)', borderColor: 'rgba(132, 204, 22, 0.2)' }}>
+              <div className="stat-label" style={{ color: '#a3e635' }}>Ranged Bonus</div>
+              <div className="stat-value" style={{ color: '#a3e635' }}>
                 +{totalStats.rangedBonus || 0}
               </div>
             </div>
@@ -177,58 +221,73 @@ export default function EquipmentPage() {
       </div>
 
       {/* Equippable Items from Inventory */}
-      <div className="mt-6 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-4">
-          Equippable Items
-        </h2>
+      <div className="card p-5 mt-6">
+        <div className="section-header mb-4">
+          <span className="section-title">Equippable Items</span>
+          <span className="section-line" />
+        </div>
         {equippableItems.length === 0 ? (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            No equippable items in inventory. Smith some gear!
-          </p>
+          <div className="text-center py-8">
+            <span className="text-3xl mb-3 block">🔧</span>
+            <p className="text-sm text-[var(--text-muted)]">
+              No equippable items in inventory. Smith some gear!
+            </p>
+          </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {equippableItems.map(({ itemId, quantity, equipment: equip, item, canEquip }) => {
+            {equippableItems.map(({ itemId, quantity, equipment: equip, item, canEquip }, index) => {
               const requirementText = getRequirementText(itemId);
               return (
                 <button
                   key={itemId}
                   onClick={() => handleEquip(itemId)}
                   disabled={!canEquip}
-                  className={`rounded-lg border p-3 text-left transition-colors ${
-                    canEquip
-                      ? 'border-zinc-200 bg-white hover:border-green-400 hover:bg-green-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-green-600 dark:hover:bg-green-950'
-                      : 'cursor-not-allowed border-zinc-200 bg-zinc-100 opacity-50 dark:border-zinc-800 dark:bg-zinc-900'
-                  }`}
+                  className={`equipment-slot opacity-0 animate-fade-in ${canEquip ? '' : 'opacity-50'}`}
+                  style={{
+                    animationDelay: `${index * 0.03}s`,
+                    animationFillMode: 'forwards',
+                    borderColor: canEquip ? 'var(--border-card)' : undefined,
+                  }}
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-lg">{item?.icon}</span>
-                    <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                    <span className="text-sm font-medium text-[var(--text-primary)] flex-1 text-left">
                       {item?.name}
                     </span>
-                    <span className="text-xs text-zinc-500">x{quantity}</span>
+                    <span className="text-xs text-[var(--text-muted)]">x{quantity}</span>
                   </div>
-                  <div className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">
+                  <div className="text-xs text-[var(--text-muted)] mb-1.5">
                     {SLOT_NAMES[equip.slot]}
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {equip.stats.attackBonus && (
-                      <span className="text-xs text-orange-600 dark:text-orange-400">
+                      <span className="stat-bonus stat-bonus-attack">
                         +{equip.stats.attackBonus} Atk
                       </span>
                     )}
                     {equip.stats.strengthBonus && (
-                      <span className="text-xs text-red-600 dark:text-red-400">
+                      <span className="stat-bonus stat-bonus-strength">
                         +{equip.stats.strengthBonus} Str
                       </span>
                     )}
                     {equip.stats.defenceBonus && (
-                      <span className="text-xs text-blue-600 dark:text-blue-400">
+                      <span className="stat-bonus stat-bonus-defence">
                         +{equip.stats.defenceBonus} Def
+                      </span>
+                    )}
+                    {equip.stats.rangedBonus && (
+                      <span className="stat-bonus stat-bonus-ranged">
+                        +{equip.stats.rangedBonus} Rng
+                      </span>
+                    )}
+                    {equip.stats.magicBonus && (
+                      <span className="stat-bonus stat-bonus-magic">
+                        +{equip.stats.magicBonus} Mag
                       </span>
                     )}
                   </div>
                   {requirementText && (
-                    <div className="mt-1 text-xs text-red-500">
+                    <div className="mt-1.5 text-xs text-[#f87171]">
                       {requirementText}
                     </div>
                   )}

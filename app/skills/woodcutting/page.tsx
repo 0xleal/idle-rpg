@@ -5,6 +5,8 @@ import { WOODCUTTING_ACTIONS } from '@/data/skills/woodcutting';
 import { getItem } from '@/data/resources';
 import { levelForXp, xpForLevel, formatXp, xpProgress } from '@/lib/experience';
 
+const SKILL_COLOR = 'var(--skill-woodcutting)';
+
 export default function WoodcuttingPage() {
   const skills = useGameStore((state) => state.skills);
   const currentAction = useGameStore((state) => state.currentAction);
@@ -26,74 +28,92 @@ export default function WoodcuttingPage() {
     const action = WOODCUTTING_ACTIONS.find((a) => a.id === actionId);
     if (!action) return;
 
-    // Check level requirement
     if (currentLevel < action.levelRequired) return;
 
-    // If clicking the same action, stop it
     if (activeActionId === actionId) {
       stopAction();
       return;
     }
 
-    // Start the new action
     startAction(action);
   };
 
   return (
-    <div>
-      {/* Header with skill info */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-          Woodcutting
-        </h1>
-        <div className="mt-2 flex items-center gap-4">
-          <span className="text-lg font-medium text-zinc-700 dark:text-zinc-300">
-            Level {currentLevel}
-          </span>
-          <span className="text-sm text-zinc-500 dark:text-zinc-400">
-            {formatXp(woodcuttingXp)} / {formatXp(nextLevelXp)} XP
-          </span>
-        </div>
-        {/* XP progress bar */}
-        <div className="mt-2 h-2 w-64 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
+    <div className="max-w-4xl">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-4 mb-4">
           <div
-            className="h-full bg-green-500 transition-all duration-200"
-            style={{ width: `${progress * 100}%` }}
+            className="skill-icon"
+            style={{ background: `${SKILL_COLOR}15` }}
+          >
+            <span className="animate-float">🪓</span>
+          </div>
+          <div>
+            <h1 className="font-[var(--font-cinzel)] text-3xl font-bold text-gradient">
+              Woodcutting
+            </h1>
+            <div className="flex items-center gap-3 mt-1">
+              <span
+                className="text-2xl font-bold"
+                style={{ color: SKILL_COLOR }}
+              >
+                Level {currentLevel}
+              </span>
+              <span className="text-[var(--text-muted)]">•</span>
+              <span className="text-[var(--text-secondary)]">
+                {formatXp(woodcuttingXp)} / {formatXp(nextLevelXp)} XP
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="progress-bar progress-bar-lg w-80">
+          <div
+            className="progress-fill"
+            style={{
+              width: `${progress * 100}%`,
+              background: `linear-gradient(90deg, ${SKILL_COLOR}80, ${SKILL_COLOR})`,
+            }}
           />
+        </div>
+        <div className="mt-1 text-xs text-[var(--text-muted)]">
+          {formatXp(nextLevelXp - woodcuttingXp)} XP to level {currentLevel + 1}
         </div>
       </div>
 
-      {/* Current action display */}
+      {/* Current Action Banner */}
       {isWoodcutting && (
-        <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-950">
-          <div className="flex items-center justify-between">
+        <div className="action-banner mb-6 animate-fade-in">
+          <div className="flex items-center justify-between mb-3">
             <div>
-              <span className="text-sm text-green-700 dark:text-green-300">
-                Currently chopping
-              </span>
-              <div className="font-medium text-green-900 dark:text-green-100">
+              <div className="text-sm text-[var(--text-muted)]">Currently Chopping</div>
+              <div className="text-lg font-semibold text-[var(--accent-gold)]">
                 {WOODCUTTING_ACTIONS.find((a) => a.id === activeActionId)?.name}
               </div>
             </div>
-            <button
-              onClick={stopAction}
-              className="rounded-md bg-red-100 px-3 py-1 text-sm font-medium text-red-700 hover:bg-red-200 dark:bg-red-900 dark:text-red-100 dark:hover:bg-red-800"
-            >
+            <button onClick={stopAction} className="btn btn-danger">
               Stop
             </button>
           </div>
-          <div className="mt-3 h-3 overflow-hidden rounded-full bg-green-200 dark:bg-green-800">
+          <div className="progress-bar progress-bar-lg">
             <div
-              className="h-full bg-green-500 transition-all duration-100"
-              style={{ width: `${actionProgress * 100}%` }}
+              className="progress-fill"
+              style={{
+                width: `${actionProgress * 100}%`,
+                background: `linear-gradient(90deg, ${SKILL_COLOR}80, ${SKILL_COLOR})`,
+              }}
             />
           </div>
         </div>
       )}
 
-      {/* Tree list */}
+      {/* Actions List */}
+      <div className="section-header">
+        <span className="section-title">Trees</span>
+        <span className="section-line" />
+      </div>
       <div className="grid gap-3">
-        {WOODCUTTING_ACTIONS.map((action) => {
+        {WOODCUTTING_ACTIONS.map((action, index) => {
           const isLocked = currentLevel < action.levelRequired;
           const isActive = activeActionId === action.id;
           const item = action.itemProduced
@@ -105,35 +125,36 @@ export default function WoodcuttingPage() {
               key={action.id}
               onClick={() => handleTreeClick(action.id)}
               disabled={isLocked}
-              className={`flex items-center justify-between rounded-lg border p-4 text-left transition-colors ${
-                isActive
-                  ? 'border-green-500 bg-green-50 dark:border-green-600 dark:bg-green-950'
-                  : isLocked
-                    ? 'cursor-not-allowed border-zinc-200 bg-zinc-100 opacity-50 dark:border-zinc-800 dark:bg-zinc-900'
-                    : 'border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 dark:hover:bg-zinc-800'
-              }`}
+              className={`action-card opacity-0 animate-fade-in ${isActive ? 'action-card-active' : ''} ${isLocked ? 'opacity-40' : ''}`}
+              style={{
+                animationDelay: `${index * 0.05}s`,
+                animationFillMode: 'forwards',
+              }}
             >
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">🌳</span>
+              <div className="flex items-center gap-4">
+                <div
+                  className="skill-icon"
+                  style={{ background: isActive ? `${SKILL_COLOR}20` : 'rgba(0,0,0,0.3)' }}
+                >
+                  🌳
+                </div>
                 <div>
-                  <div className="font-medium text-zinc-900 dark:text-zinc-100">
+                  <div className="text-[var(--text-primary)] font-medium">
                     {action.name}
                   </div>
-                  <div className="text-sm text-zinc-500 dark:text-zinc-400">
+                  <div className="text-sm text-[var(--text-muted)]">
                     {isLocked
                       ? `Requires level ${action.levelRequired}`
                       : `${action.xp} XP • ${(action.baseTime / 1000).toFixed(1)}s`}
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
-                {item && (
-                  <>
-                    <span>{item.icon}</span>
-                    <span>{item.name}</span>
-                  </>
-                )}
-              </div>
+              {item && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">{item.icon}</span>
+                  <span className="text-sm text-[var(--text-secondary)]">{item.name}</span>
+                </div>
+              )}
             </button>
           );
         })}
