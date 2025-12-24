@@ -4,6 +4,7 @@ import { useGameStore } from '@/store/gameStore';
 import { ALL_SKILLS, SkillId } from '@/types/game';
 import { levelForXp, xpProgress, formatXp, xpForLevel } from '@/lib/experience';
 import Link from 'next/link';
+import { PlayerAvatar } from '@/components/PlayerAvatar';
 
 const SKILL_CONFIG: Record<SkillId, { icon: string; color: string; href: string }> = {
   woodcutting: { icon: '🪓', color: 'var(--skill-woodcutting)', href: '/skills/woodcutting' },
@@ -28,8 +29,9 @@ export default function Dashboard() {
   const skills = useGameStore((state) => state.skills);
   const currentAction = useGameStore((state) => state.currentAction);
 
+  // Total level counts levels gained above 1 (so fresh character starts at 0)
   const totalLevel = ALL_SKILLS.reduce(
-    (sum, skillId) => sum + levelForXp(skills[skillId].xp),
+    (sum, skillId) => sum + Math.max(0, levelForXp(skills[skillId].xp) - 1),
     0
   );
 
@@ -111,26 +113,36 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="stat-block">
-          <div className="stat-label">Total Level</div>
-          <div className="stat-value stat-value-gold">{totalLevel}</div>
+      {/* Hero Section: Avatar + Stats */}
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 mb-8">
+        {/* Player Avatar */}
+        <div className="animate-fade-in">
+          <PlayerAvatar />
         </div>
-        <div className="stat-block">
-          <div className="stat-label">Total XP</div>
-          <div className="stat-value">{formatXp(totalXp)}</div>
-        </div>
-        <div className="stat-block">
-          <div className="stat-label">Skills Trained</div>
-          <div className="stat-value">
-            {ALL_SKILLS.filter((s) => skills[s].xp > 0).length}/{ALL_SKILLS.length}
+
+        {/* Stats Overview */}
+        <div className="grid grid-cols-2 gap-4 content-start">
+          <div className="stat-block opacity-0 animate-fade-in" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
+            <div className="stat-label">Total XP</div>
+            <div className="stat-value">{formatXp(totalXp)}</div>
           </div>
-        </div>
-        <div className="stat-block">
-          <div className="stat-label">Max Skill</div>
-          <div className="stat-value stat-value-gold">
-            {Math.max(...ALL_SKILLS.map((s) => levelForXp(skills[s].xp)))}
+          <div className="stat-block opacity-0 animate-fade-in" style={{ animationDelay: '0.15s', animationFillMode: 'forwards' }}>
+            <div className="stat-label">Skills Trained</div>
+            <div className="stat-value">
+              {ALL_SKILLS.filter((s) => skills[s].xp > 0).length}/{ALL_SKILLS.length}
+            </div>
+          </div>
+          <div className="stat-block opacity-0 animate-fade-in" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
+            <div className="stat-label">Max Skill Level</div>
+            <div className="stat-value stat-value-gold">
+              {Math.max(...ALL_SKILLS.map((s) => levelForXp(skills[s].xp)))}
+            </div>
+          </div>
+          <div className="stat-block opacity-0 animate-fade-in" style={{ animationDelay: '0.25s', animationFillMode: 'forwards' }}>
+            <div className="stat-label">Average Level</div>
+            <div className="stat-value">
+              {Math.round(ALL_SKILLS.reduce((sum, s) => sum + levelForXp(skills[s].xp), 0) / ALL_SKILLS.length)}
+            </div>
           </div>
         </div>
       </div>
