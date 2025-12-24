@@ -35,34 +35,48 @@ export function GameProvider({ children }: GameProviderProps) {
       console.error('Failed to load save:', loadResult.error);
     }
 
+    // Show warning for checksum failure OR if data was sanitized
     if (loadResult.checksumFailed) {
       setValidationWarning('Save data may have been modified externally. Some values were adjusted.');
+    } else if (loadResult.validation?.wasModified) {
+      setValidationWarning('Some save data was invalid and has been corrected.');
     }
 
     if (loadResult.data) {
       const savedData = loadResult.data;
-
-      // Load the validated/sanitized save data
-      loadFromSave(savedData);
+      const savedAction = savedData.currentAction;
 
       // Calculate time elapsed since last save
       const now = Date.now();
       const elapsedMs = now - savedData.lastSaveTime;
 
+      // IMPORTANT: Load save with action temporarily cleared to prevent race condition
+      // The game loop tick() might run before we apply offline gains, which would
+      // cause duplicate processing. By clearing the action first, tick() becomes a no-op.
+      loadFromSave({ ...savedData, currentAction: null });
+
       // Simulate offline progress with proper material consumption
-      if (elapsedMs > 0 && savedData.currentAction) {
+      if (elapsedMs > 0 && savedAction) {
         const gains = simulateOfflineProgress(
           elapsedMs,
-          savedData.currentAction,
+          savedAction,
           savedData.inventory
         );
 
-        // Apply the offline gains
-        applyOfflineGains(gains);
+        // Apply the offline gains (this will set the correct action state)
+        // Pass the original action so it can be restored with updated elapsed time
+        applyOfflineGains(gains, savedAction);
 
         // Show welcome back modal if significant gains
         if (hasSignificantGains(gains)) {
-          queueMicrotask(() => setOfflineGains(gains));
+          // Deep copy gains to prevent any potential mutation issues
+          const gainsCopy: OfflineGains = {
+            ...gains,
+            skillXp: { ...gains.skillXp },
+            itemsGained: { ...gains.itemsGained },
+            itemsConsumed: { ...gains.itemsConsumed },
+          };
+          queueMicrotask(() => setOfflineGains(gainsCopy));
         }
       }
     }

@@ -54,7 +54,7 @@ interface GameActions {
   loadFromSave: (saveData: SaveData) => void;
   getPlayerState: () => PlayerState;
   // Offline progress
-  applyOfflineGains: (gains: OfflineGains) => void;
+  applyOfflineGains: (gains: OfflineGains, originalAction?: Action | null) => void;
   // Reset to initial state
   reset: () => void;
 }
@@ -385,7 +385,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     };
   },
 
-  applyOfflineGains: (gains) => {
+  applyOfflineGains: (gains, originalAction?: Action | null) => {
     const state = get();
     const newSkills = { ...state.skills };
     const newInventory = { ...state.inventory };
@@ -413,14 +413,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
     }
 
-    // Update current action
-    let newAction = state.currentAction;
+    // Determine final action state
+    let newAction: Action | null = null;
+    const actionToUpdate = originalAction ?? state.currentAction;
+
     if (gains.stoppedEarly) {
       // Clear action if we stopped due to materials
       newAction = null;
-    } else if (newAction && gains.remainingElapsedMs !== undefined) {
+    } else if (actionToUpdate && gains.remainingElapsedMs !== undefined) {
       // Update elapsed time for partial progress
-      newAction = { ...newAction, elapsedMs: gains.remainingElapsedMs };
+      newAction = { ...actionToUpdate, elapsedMs: gains.remainingElapsedMs };
     }
 
     set({
