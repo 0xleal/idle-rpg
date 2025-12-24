@@ -26,6 +26,13 @@ export const ALL_SKILLS: SkillId[] = [
   'attack', 'strength', 'defence', 'hitpoints', 'ranged', 'magic', 'prayer',
 ];
 
+// Bonus drop definition (e.g., gems from mining)
+export interface BonusDrop {
+  itemId: string;
+  chance: number; // 0-1 (e.g., 0.02 = 2%)
+  quantity?: number; // defaults to 1
+}
+
 // Current action being performed
 export interface Action {
   type: 'skilling'; // 'combat' later
@@ -39,6 +46,10 @@ export interface Action {
     itemId: string;
     quantity: number;
   };
+  // Optional input items consumed on each completion
+  inputItems?: ItemRequirement[];
+  // Optional bonus drops rolled on each completion
+  bonusDrops?: BonusDrop[];
 }
 
 // Player's skill state
@@ -50,6 +61,7 @@ export interface SkillState {
 export interface PlayerState {
   skills: Record<SkillId, SkillState>;
   inventory: Record<string, number>; // itemId -> quantity
+  equipment: Partial<Record<import('@/types/equipment').EquipmentSlot, string>>; // slot -> itemId
   currentAction: Action | null;
   lastTickTime: number; // for offline progress calculation
 }
@@ -61,6 +73,14 @@ export interface ItemDefinition {
   icon: string; // emoji for MVP
   stackable: boolean;
   sellPrice?: number;
+  // For food items - how much HP it heals
+  healsFor?: number;
+}
+
+// Input requirement for crafting
+export interface ItemRequirement {
+  itemId: string;
+  quantity: number;
 }
 
 // Skilling action definition (used in data files)
@@ -75,4 +95,10 @@ export interface SkillingActionDefinition {
     itemId: string;
     quantity: number;
   };
+  // Optional input requirements (for crafting skills)
+  inputItems?: ItemRequirement[];
+  // Optional bonus drops with chances
+  bonusDrops?: BonusDrop[];
+  // Category for UI grouping (e.g., 'smelting', 'forging')
+  category?: string;
 }

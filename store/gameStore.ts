@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import { PlayerState, Action, SkillId, ALL_SKILLS, SkillingActionDefinition } from '@/types/game';
+import { EquipmentSlot } from '@/types/equipment';
+import { getEquipment, isEquipment } from '@/data/equipment';
 import { SaveData } from '@/lib/save';
+import { levelForXp } from '@/lib/experience';
 
 // Generate initial skill state (all at 0 XP)
 function createInitialSkills(): Record<SkillId, { xp: number }> {
@@ -15,6 +18,7 @@ function createInitialState(): PlayerState {
   return {
     skills: createInitialSkills(),
     inventory: {},
+    equipment: {},
     currentAction: null,
     lastTickTime: Date.now(),
   };
@@ -33,6 +37,11 @@ interface GameActions {
   removeItem: (itemId: string, quantity: number) => boolean;
   hasItem: (itemId: string, quantity?: number) => boolean;
   getItemCount: (itemId: string) => number;
+  // Equipment
+  equipItem: (itemId: string) => boolean;
+  unequipSlot: (slot: EquipmentSlot) => boolean;
+  canEquipItem: (itemId: string) => boolean;
+  getEquippedItem: (slot: EquipmentSlot) => string | undefined;
   // Persistence
   loadFromSave: (saveData: SaveData) => void;
   getPlayerState: () => PlayerState;
@@ -46,6 +55,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
   ...createInitialState(),
 
   startAction: (definition) => {
+    // Check if player has required inputs (if any)
+    if (definition.inputItems && definition.inputItems.length > 0) {
+      const state = get();
+      for (const req of definition.inputItems) {
+        const have = state.inventory[req.itemId] || 0;
+        if (have < req.quantity) {
+          // Can't start - missing materials
+          return;
+        }
+      }
+    }
+
     const action: Action = {
       type: 'skilling',
       skillId: definition.skillId,
@@ -54,6 +75,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       elapsedMs: 0,
       xpReward: definition.xp,
       itemReward: definition.itemProduced,
+      inputItems: definition.inputItems,
+      bonusDrops: definition.bonusDrops,
     };
     set({ currentAction: action });
   },
@@ -67,38 +90,89 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!state.currentAction) return;
 
     let { elapsedMs } = state.currentAction;
-    const { duration, xpReward, itemReward, skillId } = state.currentAction;
+    const { duration, xpReward, itemReward, skillId, bonusDrops, inputItems } = state.currentAction;
 
     elapsedMs += deltaMs;
 
-    // Track rewards to apply
-    let completions = 0;
+    // Count potential completions
+    let potentialCompletions = 0;
     while (elapsedMs >= duration) {
-      completions++;
+      potentialCompletions++;
       elapsedMs -= duration;
     }
 
-    if (completions > 0) {
-      // Apply all rewards at once (more efficient)
-      const totalXp = xpReward * completions;
+    if (potentialCompletions > 0) {
+      const newInventory = { ...state.inventory };
+      let actualCompletions = potentialCompletions;
+
+      // If action requires inputs, limit completions by available materials
+      if (inputItems && inputItems.length > 0) {
+        for (const req of inputItems) {
+          const have = newInventory[req.itemId] || 0;
+          const maxFromThis = Math.floor(have / req.quantity);
+          actualCompletions = Math.min(actualCompletions, maxFromThis);
+        }
+
+        // Consume inputs
+        for (const req of inputItems) {
+          const consumed = req.quantity * actualCompletions;
+          newInventory[req.itemId] = (newInventory[req.itemId] || 0) - consumed;
+        }
+      }
+
+      // If we couldn't do any completions, stop the action
+      if (actualCompletions === 0) {
+        set({ currentAction: null, lastTickTime: Date.now() });
+        return;
+      }
+
+      // Add back unused time
+      const unusedCompletions = potentialCompletions - actualCompletions;
+      elapsedMs += unusedCompletions * duration;
+
+      // Apply rewards
+      const totalXp = xpReward * actualCompletions;
       const newSkills = { ...state.skills };
       newSkills[skillId] = {
         xp: newSkills[skillId].xp + totalXp,
       };
 
-      const newInventory = { ...state.inventory };
       if (itemReward) {
-        const totalItems = itemReward.quantity * completions;
+        const totalItems = itemReward.quantity * actualCompletions;
         newInventory[itemReward.itemId] = (newInventory[itemReward.itemId] || 0) + totalItems;
+      }
+
+      // Roll for bonus drops on each completion
+      if (bonusDrops && bonusDrops.length > 0) {
+        for (let i = 0; i < actualCompletions; i++) {
+          for (const drop of bonusDrops) {
+            if (Math.random() < drop.chance) {
+              const qty = drop.quantity ?? 1;
+              newInventory[drop.itemId] = (newInventory[drop.itemId] || 0) + qty;
+            }
+          }
+        }
+      }
+
+      // Check if we can continue (have materials for next completion)
+      let canContinue = true;
+      if (inputItems && inputItems.length > 0) {
+        for (const req of inputItems) {
+          const have = newInventory[req.itemId] || 0;
+          if (have < req.quantity) {
+            canContinue = false;
+            break;
+          }
+        }
       }
 
       set({
         skills: newSkills,
         inventory: newInventory,
-        currentAction: {
+        currentAction: canContinue ? {
           ...state.currentAction,
           elapsedMs,
-        },
+        } : null,
         lastTickTime: Date.now(),
       });
     } else {
@@ -155,6 +229,74 @@ export const useGameStore = create<GameStore>((set, get) => ({
     return state.inventory[itemId] || 0;
   },
 
+  canEquipItem: (itemId) => {
+    if (!isEquipment(itemId)) return false;
+    const equipDef = getEquipment(itemId);
+    if (!equipDef) return false;
+
+    const state = get();
+    // Check level requirements
+    if (equipDef.requirements) {
+      for (const [skill, level] of Object.entries(equipDef.requirements)) {
+        const skillId = skill as SkillId;
+        const playerLevel = levelForXp(state.skills[skillId]?.xp || 0);
+        if (playerLevel < level) return false;
+      }
+    }
+    return true;
+  },
+
+  equipItem: (itemId) => {
+    const state = get();
+    if (!isEquipment(itemId)) return false;
+    if (!state.canEquipItem(itemId)) return false;
+    if ((state.inventory[itemId] || 0) < 1) return false;
+
+    const equipDef = getEquipment(itemId);
+    if (!equipDef) return false;
+
+    const newInventory = { ...state.inventory };
+    const newEquipment = { ...state.equipment };
+
+    // Remove item from inventory
+    newInventory[itemId] = (newInventory[itemId] || 0) - 1;
+
+    // If slot already has item, return it to inventory
+    const currentEquipped = newEquipment[equipDef.slot];
+    if (currentEquipped) {
+      newInventory[currentEquipped] = (newInventory[currentEquipped] || 0) + 1;
+    }
+
+    // Equip new item
+    newEquipment[equipDef.slot] = itemId;
+
+    set({ inventory: newInventory, equipment: newEquipment });
+    return true;
+  },
+
+  unequipSlot: (slot) => {
+    const state = get();
+    const equippedItemId = state.equipment[slot];
+    if (!equippedItemId) return false;
+
+    const newInventory = { ...state.inventory };
+    const newEquipment = { ...state.equipment };
+
+    // Return item to inventory
+    newInventory[equippedItemId] = (newInventory[equippedItemId] || 0) + 1;
+
+    // Remove from equipment
+    delete newEquipment[slot];
+
+    set({ inventory: newInventory, equipment: newEquipment });
+    return true;
+  },
+
+  getEquippedItem: (slot) => {
+    const state = get();
+    return state.equipment[slot];
+  },
+
   loadFromSave: (saveData) => {
     // Merge saved skills with initial skills (in case new skills were added)
     const initialSkills = createInitialSkills();
@@ -168,6 +310,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({
       skills: mergedSkills,
       inventory: saveData.inventory || {},
+      equipment: saveData.equipment || {},
       currentAction: saveData.currentAction,
       lastTickTime: saveData.lastSaveTime,
     });
@@ -178,6 +321,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     return {
       skills: state.skills,
       inventory: state.inventory,
+      equipment: state.equipment,
       currentAction: state.currentAction,
       lastTickTime: state.lastTickTime,
     };
