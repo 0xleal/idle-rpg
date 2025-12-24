@@ -1,36 +1,102 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Idle RPG
 
-## Getting Started
+A browser-based idle RPG inspired by Melvor Idle. Train skills, acquire gear, defeat monsters, and conquer dungeons to achieve 100% completion.
 
-First, run the development server:
+## Core Concept
+
+Players progress through various skills and combat encounters while the game runs in the background. The core loop involves:
+1. **Gathering** - Collect resources through skilling
+2. **Crafting** - Transform resources into useful items and gear
+3. **Combat** - Fight monsters to gain experience and loot
+4. **Progression** - Level up skills, unlock new content, complete dungeons
+
+## Skills
+
+### Gathering Skills
+| Skill | Description | Produces |
+|-------|-------------|----------|
+| Woodcutting | Chop trees for logs | Logs (various types) |
+| Mining | Extract ores from rocks | Ores, gems |
+| Fishing | Catch fish from water | Raw fish |
+| Farming | Grow crops over time | Herbs, vegetables, seeds |
+
+### Artisan Skills
+| Skill | Description | Creates |
+|-------|-------------|---------|
+| Smithing | Smelt ores, forge weapons/armor | Metal bars, equipment |
+| Cooking | Prepare food for combat healing | Cooked food |
+| Fletching | Craft bows and arrows | Ranged weapons, ammo |
+| Crafting | Create jewelry and leather gear | Accessories, light armor |
+| Herblore | Brew potions from herbs | Combat potions |
+
+### Combat Skills
+| Skill | Description |
+|-------|-------------|
+| Attack | Melee accuracy |
+| Strength | Melee damage |
+| Defence | Damage reduction |
+| Hitpoints | Total health pool |
+| Ranged | Ranged accuracy and damage |
+| Magic | Magic accuracy and damage |
+| Prayer | Unlocks combat prayers/buffs |
+
+## Combat System
+
+- **Auto-combat**: Player and monster take turns attacking based on attack speed
+- **Combat Triangle**: Melee > Ranged > Magic > Melee
+- **Equipment Slots**: Head, Body, Legs, Boots, Gloves, Cape, Amulet, Ring, Weapon, Shield/Off-hand
+- **Food**: Consumed automatically when HP drops below threshold
+- **Prayers**: Toggle-able buffs that drain prayer points
+
+## Progression
+
+### Experience & Levels
+- Skills cap at level 99 (13,034,431 XP)
+- Mastery system for individual items within skills
+- Combat level calculated from combat skill levels
+
+### Unlocks
+- Higher skill levels unlock new resources, recipes, and monsters
+- Quest-like milestones gate major content
+
+## Dungeons
+
+Dungeons are multi-stage encounters requiring preparation and strategy:
+
+1. **Forest Depths** - Entry dungeon, teaches mechanics
+2. **Abandoned Mine** - Mid-tier, requires solid gear
+3. **Dragon's Lair** - High-tier, needs potions and prayers
+4. **The Void** - Endgame, requires near-max stats
+5. **Final Trial** - 100% completion dungeon
+
+Each dungeon consists of multiple monster waves culminating in a boss fight. Rewards include unique gear and completion percentage.
+
+## Completion
+
+100% completion requires:
+- [ ] All skills to level 99
+- [ ] All dungeons cleared
+- [ ] All equipment obtained
+- [ ] All pets collected
+- [ ] All achievements unlocked
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS v4
+- **State Management**: Zustand
+- **Persistence**: Local storage with offline progress calculation
+
+## Development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to play.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## License
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
