@@ -14,7 +14,10 @@ const navItems: NavItem[] = [
   { href: '/skills/woodcutting', label: 'Woodcutting', icon: '🪓' },
   { href: '/skills/mining', label: 'Mining', icon: '⛏️' },
   { href: '/skills/fishing', label: 'Fishing', icon: '🎣' },
+  { href: '/skills/smithing', label: 'Smithing', icon: '🔨' },
+  { href: '/skills/cooking', label: 'Cooking', icon: '🍳' },
   { href: '/inventory', label: 'Inventory', icon: '🎒' },
+  { href: '/equipment', label: 'Equipment', icon: '🛡️' },
   { href: '/combat', label: 'Combat', icon: '⚔️' },
 ];
 

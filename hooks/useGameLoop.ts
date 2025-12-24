@@ -2,11 +2,13 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { useGameStore } from '@/store/gameStore';
+import { useCombatStore } from '@/store/combatStore';
 
 const TICK_INTERVAL = 100; // ms - tick ~10 times per second
 
 export function useGameLoop() {
   const tick = useGameStore((state) => state.tick);
+  const combatTick = useCombatStore((state) => state.combatTick);
   const lastTickTimeRef = useRef<number>(0);
   const animationFrameRef = useRef<number | null>(null);
   const lastFrameTimeRef = useRef<number>(0);
@@ -28,8 +30,9 @@ export function useGameLoop() {
 
     if (delta > 0) {
       tick(delta);
+      combatTick(delta);
     }
-  }, [tick]);
+  }, [tick, combatTick]);
 
   useEffect(() => {
     // Main game loop using requestAnimationFrame
