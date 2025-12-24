@@ -30,55 +30,64 @@ const SKILL_NAMES: Record<SkillId, string> = {
 };
 
 export function WelcomeBackModal({ gains, onClose }: WelcomeBackModalProps) {
-  const xpEntries = Object.entries(gains.skillXp).filter(([, xp]) => xp > 0);
-  const itemEntries = Object.entries(gains.items).filter(([, count]) => count > 0);
+  const xpEntries = Object.entries(gains.skillXp).filter(([, xp]) => xp && xp > 0);
+  const itemsGainedEntries = Object.entries(gains.itemsGained).filter(([, count]) => count > 0);
+  const itemsConsumedEntries = Object.entries(gains.itemsConsumed).filter(([, count]) => count > 0);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-lg border border-zinc-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
-        <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
-          Welcome Back!
-        </h2>
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-          You were away for {formatDuration(gains.timeAwayMs)}
-        </p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+      <div className="card w-full max-w-md p-6 animate-fade-in">
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-3xl">🌙</span>
+          <div>
+            <h2 className="font-[var(--font-cinzel)] text-xl font-bold text-gradient">
+              Welcome Back!
+            </h2>
+            <p className="text-sm text-[var(--text-muted)]">
+              You were away for {formatDuration(gains.timeAwayMs)}
+            </p>
+          </div>
+        </div>
 
         {gains.actionCompletions > 0 && (
-          <div className="mt-4 space-y-3">
-            <div className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              While you were away, you completed {gains.actionCompletions.toLocaleString()} actions:
+          <div className="space-y-3">
+            <div className="text-sm text-[var(--text-secondary)]">
+              Completed <span className="font-bold text-[var(--text-primary)]">{gains.actionCompletions.toLocaleString()}</span> actions while away
+              {gains.stoppedEarly && gains.stopReason === 'out_of_materials' && (
+                <span className="text-[#f59e0b]"> (stopped: ran out of materials)</span>
+              )}
             </div>
 
             {/* XP Gains */}
             {xpEntries.length > 0 && (
-              <div className="rounded-md bg-green-50 p-3 dark:bg-green-950">
-                <div className="text-sm font-medium text-green-800 dark:text-green-200">
+              <div className="rounded-lg p-3 bg-[#22c55e]/10 border border-[#22c55e]/20">
+                <div className="text-sm font-medium text-[#22c55e] mb-2">
                   XP Gained
                 </div>
                 {xpEntries.map(([skillId, xp]) => (
                   <div
                     key={skillId}
-                    className="mt-1 flex items-center justify-between text-sm text-green-700 dark:text-green-300"
+                    className="flex items-center justify-between text-sm text-[#4ade80]"
                   >
                     <span>{SKILL_NAMES[skillId as SkillId]}</span>
-                    <span>+{formatXp(xp)} XP</span>
+                    <span>+{formatXp(xp!)} XP</span>
                   </div>
                 ))}
               </div>
             )}
 
-            {/* Item Gains */}
-            {itemEntries.length > 0 && (
-              <div className="rounded-md bg-blue-50 p-3 dark:bg-blue-950">
-                <div className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                  Items Collected
+            {/* Items Gained */}
+            {itemsGainedEntries.length > 0 && (
+              <div className="rounded-lg p-3 bg-[#3b82f6]/10 border border-[#3b82f6]/20">
+                <div className="text-sm font-medium text-[#3b82f6] mb-2">
+                  Items Gained
                 </div>
-                {itemEntries.map(([itemId, count]) => {
+                {itemsGainedEntries.map(([itemId, count]) => {
                   const item = getItem(itemId);
                   return (
                     <div
                       key={itemId}
-                      className="mt-1 flex items-center justify-between text-sm text-blue-700 dark:text-blue-300"
+                      className="flex items-center justify-between text-sm text-[#60a5fa]"
                     >
                       <span>
                         {item?.icon} {item?.name ?? itemId}
@@ -89,18 +98,41 @@ export function WelcomeBackModal({ gains, onClose }: WelcomeBackModalProps) {
                 })}
               </div>
             )}
+
+            {/* Items Consumed */}
+            {itemsConsumedEntries.length > 0 && (
+              <div className="rounded-lg p-3 bg-[#f59e0b]/10 border border-[#f59e0b]/20">
+                <div className="text-sm font-medium text-[#f59e0b] mb-2">
+                  Materials Used
+                </div>
+                {itemsConsumedEntries.map(([itemId, count]) => {
+                  const item = getItem(itemId);
+                  return (
+                    <div
+                      key={itemId}
+                      className="flex items-center justify-between text-sm text-[#fbbf24]"
+                    >
+                      <span>
+                        {item?.icon} {item?.name ?? itemId}
+                      </span>
+                      <span>-{count.toLocaleString()}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
         {gains.actionCompletions === 0 && (
-          <div className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">
-            No actions were in progress while you were away.
+          <div className="text-sm text-[var(--text-muted)] py-4 text-center">
+            No actions were completed while you were away.
           </div>
         )}
 
         <button
           onClick={onClose}
-          className="mt-6 w-full rounded-md bg-zinc-900 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          className="btn-primary w-full mt-6"
         >
           Continue
         </button>

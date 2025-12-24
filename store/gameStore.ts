@@ -5,6 +5,7 @@ import { getEquipment, isEquipment } from '@/data/equipment';
 import { getItem } from '@/data/resources';
 import { SaveData } from '@/lib/save';
 import { levelForXp } from '@/lib/experience';
+import { OfflineGains } from '@/lib/offline';
 
 // Generate initial skill state (all at 0 XP)
 function createInitialSkills(): Record<SkillId, { xp: number }> {
@@ -52,6 +53,8 @@ interface GameActions {
   // Persistence
   loadFromSave: (saveData: SaveData) => void;
   getPlayerState: () => PlayerState;
+  // Offline progress
+  applyOfflineGains: (gains: OfflineGains) => void;
   // Reset to initial state
   reset: () => void;
 }
@@ -380,6 +383,52 @@ export const useGameStore = create<GameStore>((set, get) => ({
       currentAction: state.currentAction,
       lastTickTime: state.lastTickTime,
     };
+  },
+
+  applyOfflineGains: (gains) => {
+    const state = get();
+    const newSkills = { ...state.skills };
+    const newInventory = { ...state.inventory };
+
+    // Apply XP gains
+    for (const [skillId, xp] of Object.entries(gains.skillXp)) {
+      if (xp && xp > 0) {
+        newSkills[skillId as SkillId] = {
+          xp: (newSkills[skillId as SkillId]?.xp || 0) + xp,
+        };
+      }
+    }
+
+    // Remove consumed items
+    for (const [itemId, qty] of Object.entries(gains.itemsConsumed)) {
+      if (qty && qty > 0) {
+        newInventory[itemId] = Math.max(0, (newInventory[itemId] || 0) - qty);
+      }
+    }
+
+    // Add gained items
+    for (const [itemId, qty] of Object.entries(gains.itemsGained)) {
+      if (qty && qty > 0) {
+        newInventory[itemId] = (newInventory[itemId] || 0) + qty;
+      }
+    }
+
+    // Update current action
+    let newAction = state.currentAction;
+    if (gains.stoppedEarly) {
+      // Clear action if we stopped due to materials
+      newAction = null;
+    } else if (newAction && gains.remainingElapsedMs !== undefined) {
+      // Update elapsed time for partial progress
+      newAction = { ...newAction, elapsedMs: gains.remainingElapsedMs };
+    }
+
+    set({
+      skills: newSkills,
+      inventory: newInventory,
+      currentAction: newAction,
+      lastTickTime: Date.now(),
+    });
   },
 
   reset: () => {

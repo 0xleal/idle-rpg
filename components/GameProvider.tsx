@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { useGameLoop } from '@/hooks/useGameLoop';
 import { loadGame, saveGame } from '@/lib/save';
-import { calculateOfflineProgress, hasSignificantGains, OfflineGains, MAX_OFFLINE_TIME } from '@/lib/offline';
+import { simulateOfflineProgress, hasSignificantGains, OfflineGains } from '@/lib/offline';
 import { WelcomeBackModal } from '@/components/WelcomeBackModal';
 
 const AUTOSAVE_INTERVAL = 30000; // 30 seconds
@@ -16,9 +16,10 @@ interface GameProviderProps {
 export function GameProvider({ children }: GameProviderProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [offlineGains, setOfflineGains] = useState<OfflineGains | null>(null);
+  const [validationWarning, setValidationWarning] = useState<string | null>(null);
   const loadFromSave = useGameStore((state) => state.loadFromSave);
   const getPlayerState = useGameStore((state) => state.getPlayerState);
-  const tick = useGameStore((state) => state.tick);
+  const applyOfflineGains = useGameStore((state) => state.applyOfflineGains);
 
   // Save game function
   const save = useCallback(() => {
@@ -28,34 +29,47 @@ export function GameProvider({ children }: GameProviderProps) {
 
   // Initialize game on mount
   useEffect(() => {
-    const savedData = loadGame();
+    const loadResult = loadGame();
 
-    if (savedData) {
+    if (loadResult.error) {
+      console.error('Failed to load save:', loadResult.error);
+    }
+
+    if (loadResult.checksumFailed) {
+      setValidationWarning('Save data may have been modified externally. Some values were adjusted.');
+    }
+
+    if (loadResult.data) {
+      const savedData = loadResult.data;
+
+      // Load the validated/sanitized save data
+      loadFromSave(savedData);
+
       // Calculate time elapsed since last save
       const now = Date.now();
       const elapsedMs = now - savedData.lastSaveTime;
 
-      // Calculate offline progress before loading (for display)
-      const gains = calculateOfflineProgress(elapsedMs, savedData.currentAction);
-
-      // Load the save data
-      loadFromSave(savedData);
-
-      // Apply offline progress by ticking with elapsed time (capped)
+      // Simulate offline progress with proper material consumption
       if (elapsedMs > 0 && savedData.currentAction) {
-        const cappedTime = Math.min(elapsedMs, MAX_OFFLINE_TIME);
-        tick(cappedTime);
-      }
+        const gains = simulateOfflineProgress(
+          elapsedMs,
+          savedData.currentAction,
+          savedData.inventory
+        );
 
-      // Show welcome back modal if significant gains (deferred to avoid cascading renders)
-      if (hasSignificantGains(gains)) {
-        queueMicrotask(() => setOfflineGains(gains));
+        // Apply the offline gains
+        applyOfflineGains(gains);
+
+        // Show welcome back modal if significant gains
+        if (hasSignificantGains(gains)) {
+          queueMicrotask(() => setOfflineGains(gains));
+        }
       }
     }
 
     // Defer to avoid cascading render warning
     queueMicrotask(() => setIsLoaded(true));
-  }, [loadFromSave, tick]);
+  }, [loadFromSave, applyOfflineGains]);
 
   // Auto-save interval
   useEffect(() => {
@@ -88,11 +102,16 @@ export function GameProvider({ children }: GameProviderProps) {
     setOfflineGains(null);
   };
 
+  // Handle dismissing validation warning
+  const handleDismissWarning = () => {
+    setValidationWarning(null);
+  };
+
   // Show loading state briefly to avoid hydration issues
   if (!isLoaded) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="text-zinc-500 dark:text-zinc-400">Loading...</div>
+        <div className="text-[var(--text-muted)]">Loading...</div>
       </div>
     );
   }
@@ -100,6 +119,25 @@ export function GameProvider({ children }: GameProviderProps) {
   return (
     <>
       {children}
+      {validationWarning && (
+        <div className="fixed top-4 right-4 z-50 max-w-sm">
+          <div className="card p-4 border-[#f59e0b]/30 bg-[#f59e0b]/10">
+            <div className="flex items-start gap-3">
+              <span className="text-xl">⚠️</span>
+              <div className="flex-1">
+                <p className="text-sm text-[var(--text-primary)] font-medium">Save Validation</p>
+                <p className="text-xs text-[var(--text-secondary)] mt-1">{validationWarning}</p>
+              </div>
+              <button
+                onClick={handleDismissWarning}
+                className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {offlineGains && (
         <WelcomeBackModal gains={offlineGains} onClose={handleCloseModal} />
       )}
