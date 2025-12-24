@@ -9,6 +9,8 @@ import {
   getEffectiveAttack,
   getEffectiveStrength,
   getEffectiveDefence,
+  getEffectiveRanged,
+  getEffectiveMagic,
   calculateHitChance,
   calculateMaxHit,
   rollDamage,
@@ -16,10 +18,28 @@ import {
   getPlayerAttackSpeed,
   getPlayerMaxHp,
 } from '@/lib/combat';
+import { getEquipment } from '@/data/equipment';
+
+// Arrow damage bonuses
+const ARROW_DAMAGE: Record<string, number> = {
+  bronze_arrow: 2,
+  iron_arrow: 4,
+  steel_arrow: 6,
+  mithril_arrow: 10,
+  adamant_arrow: 15,
+  rune_arrow: 22,
+};
+
+// Rune costs for magic attacks (basic spell)
+const MAGIC_RUNE_COST = [
+  { itemId: 'air_rune', quantity: 1 },
+  { itemId: 'mind_rune', quantity: 1 },
+];
 
 interface CombatExtras {
   combatStyle: CombatStyle;
   selectedFood: string | null;
+  selectedAmmo: string | null; // Arrow type for ranged
   autoEatThreshold: number; // 0-1, e.g., 0.5 = eat when below 50% HP
   autoEatEnabled: boolean;
 }
@@ -32,6 +52,7 @@ interface CombatActions {
   eatFood: (itemId: string) => boolean;
   setCombatStyle: (style: CombatStyle) => void;
   setSelectedFood: (itemId: string | null) => void;
+  setSelectedAmmo: (itemId: string | null) => void;
   setAutoEatThreshold: (threshold: number) => void;
   setAutoEatEnabled: (enabled: boolean) => void;
 }
@@ -51,6 +72,7 @@ function createInitialCombatState(): CombatState & CombatExtras {
     lootLog: [],
     combatStyle: 'attack',
     selectedFood: null,
+    selectedAmmo: null,
     autoEatThreshold: 0.5, // 50% HP default
     autoEatEnabled: true,
   };
@@ -66,6 +88,50 @@ function findAnyFood(gameState: ReturnType<typeof useGameStore.getState>): strin
   return null;
 }
 
+// Helper to find best available arrows in inventory
+function findBestArrows(
+  gameState: ReturnType<typeof useGameStore.getState>,
+  selected: string | null
+): string | null {
+  // If selected ammo is available, use it
+  if (selected && (gameState.inventory[selected] || 0) > 0) {
+    return selected;
+  }
+  // Otherwise find best available
+  const arrowOrder = ['rune_arrow', 'adamant_arrow', 'mithril_arrow', 'steel_arrow', 'iron_arrow', 'bronze_arrow'];
+  for (const arrowId of arrowOrder) {
+    if ((gameState.inventory[arrowId] || 0) > 0) {
+      return arrowId;
+    }
+  }
+  return null;
+}
+
+// Check if player has bow equipped
+function hasRangedWeapon(gameState: ReturnType<typeof useGameStore.getState>): boolean {
+  const weaponId = gameState.equipment.weapon;
+  if (!weaponId) return false;
+  const weapon = getEquipment(weaponId);
+  return weapon?.stats.rangedBonus !== undefined && (weapon.stats.rangedBonus || 0) > 0;
+}
+
+// Check if player can cast magic (has runes)
+function canCastMagic(gameState: ReturnType<typeof useGameStore.getState>): boolean {
+  for (const req of MAGIC_RUNE_COST) {
+    if ((gameState.inventory[req.itemId] || 0) < req.quantity) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Consume magic runes
+function consumeMagicRunes(gameState: ReturnType<typeof useGameStore.getState>): void {
+  for (const req of MAGIC_RUNE_COST) {
+    gameState.removeItem(req.itemId, req.quantity);
+  }
+}
+
 export const useCombatStore = create<CombatStore>((set, get) => ({
   ...createInitialCombatState(),
 
@@ -75,6 +141,10 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
   setSelectedFood: (itemId) => {
     set({ selectedFood: itemId });
+  },
+
+  setSelectedAmmo: (itemId) => {
+    set({ selectedAmmo: itemId });
   },
 
   setAutoEatThreshold: (threshold) => {
@@ -166,11 +236,8 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     const attackLevel = levelForXp(gameState.skills.attack.xp);
     const strengthLevel = levelForXp(gameState.skills.strength.xp);
     const defenceLevel = levelForXp(gameState.skills.defence.xp);
-
-    // Calculate effective stats
-    const playerEffAttack = getEffectiveAttack(attackLevel, equipStats.attackBonus || 0);
-    const playerEffStrength = getEffectiveStrength(strengthLevel, equipStats.strengthBonus || 0);
-    const playerEffDefence = getEffectiveDefence(defenceLevel, equipStats.defenceBonus || 0);
+    const rangedLevel = levelForXp(gameState.skills.ranged.xp);
+    const magicLevel = levelForXp(gameState.skills.magic.xp);
 
     // Monster effective stats (simpler)
     const monsterEffAttack = monster.attackBonus + 8;
@@ -180,20 +247,80 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     let monsterDied = false;
     let playerDied = false;
 
+    // Determine combat mode and calculate stats
+    const isRanged = state.combatStyle === 'ranged';
+    const isMagic = state.combatStyle === 'magic';
+
+    let playerEffAttack: number;
+    let playerEffStrength: number;
+    let canAttack = true;
+    let arrowId: string | null = null;
+
+    if (isRanged) {
+      // Ranged attack
+      if (!hasRangedWeapon(gameState)) {
+        canAttack = false;
+      } else {
+        arrowId = findBestArrows(gameState, state.selectedAmmo);
+        if (!arrowId) {
+          canAttack = false;
+        } else {
+          playerEffAttack = getEffectiveRanged(rangedLevel, equipStats.rangedBonus || 0);
+          const arrowDamage = ARROW_DAMAGE[arrowId] || 0;
+          playerEffStrength = getEffectiveRanged(rangedLevel, arrowDamage);
+        }
+      }
+    } else if (isMagic) {
+      // Magic attack
+      if (!canCastMagic(gameState)) {
+        canAttack = false;
+      } else {
+        playerEffAttack = getEffectiveMagic(magicLevel, equipStats.magicBonus || 0);
+        playerEffStrength = getEffectiveMagic(magicLevel, equipStats.magicBonus || 0);
+      }
+    } else {
+      // Melee attack
+      playerEffAttack = getEffectiveAttack(attackLevel, equipStats.attackBonus || 0);
+      playerEffStrength = getEffectiveStrength(strengthLevel, equipStats.strengthBonus || 0);
+    }
+
+    const playerEffDefence = getEffectiveDefence(defenceLevel, equipStats.defenceBonus || 0);
+
     // Player attack timer
     newState.playerAttackTimer += deltaMs;
     const playerAttackSpeed = getPlayerAttackSpeed();
 
-    while (newState.playerAttackTimer >= playerAttackSpeed && !monsterDied && !playerDied) {
+    while (newState.playerAttackTimer >= playerAttackSpeed && !monsterDied && !playerDied && canAttack) {
       newState.playerAttackTimer -= playerAttackSpeed;
 
-      const hitChance = calculateHitChance(playerEffAttack, monsterEffDefence);
+      // Check ammo/runes before attack
+      if (isRanged) {
+        arrowId = findBestArrows(gameState, state.selectedAmmo);
+        if (!arrowId) {
+          canAttack = false;
+          break;
+        }
+      }
+      if (isMagic && !canCastMagic(gameState)) {
+        canAttack = false;
+        break;
+      }
+
+      const hitChance = calculateHitChance(playerEffAttack!, monsterEffDefence);
       if (doesAttackHit(hitChance)) {
-        const maxHit = calculateMaxHit(playerEffStrength);
+        const maxHit = calculateMaxHit(playerEffStrength!);
         const damage = rollDamage(maxHit);
 
         newState.monsterCurrentHp = Math.max(0, newState.monsterCurrentHp - damage);
         newState.lastHitSplat = { damage, isPlayer: true, timestamp: Date.now() };
+
+        // Consume ammo/runes
+        if (isRanged && arrowId) {
+          gameState.removeItem(arrowId, 1);
+        }
+        if (isMagic) {
+          consumeMagicRunes(gameState);
+        }
 
         // Grant combat XP based on combat style
         const xpGained = damage * 4; // Base XP per damage
@@ -205,10 +332,21 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           gameState.addXp('strength', xpGained);
         } else if (state.combatStyle === 'defence') {
           gameState.addXp('defence', xpGained);
+        } else if (state.combatStyle === 'ranged') {
+          gameState.addXp('ranged', xpGained);
+        } else if (state.combatStyle === 'magic') {
+          gameState.addXp('magic', xpGained);
         }
         gameState.addXp('hitpoints', hpXp);
       } else {
         newState.lastHitSplat = { damage: 0, isPlayer: true, timestamp: Date.now() };
+        // Still consume ammo on miss
+        if (isRanged && arrowId) {
+          gameState.removeItem(arrowId, 1);
+        }
+        if (isMagic) {
+          consumeMagicRunes(gameState);
+        }
       }
 
       if (newState.monsterCurrentHp <= 0) {
@@ -307,15 +445,20 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   },
 }));
 
-// Selector for combat level
+// Selector for combat level (highest of melee, ranged, or magic)
 export const selectCombatLevel = () => {
   const gameState = useGameStore.getState();
   const attackLevel = levelForXp(gameState.skills.attack.xp);
   const strengthLevel = levelForXp(gameState.skills.strength.xp);
   const defenceLevel = levelForXp(gameState.skills.defence.xp);
   const hitpointsLevel = levelForXp(gameState.skills.hitpoints.xp);
+  const rangedLevel = levelForXp(gameState.skills.ranged.xp);
+  const magicLevel = levelForXp(gameState.skills.magic.xp);
 
   const base = 0.25 * (defenceLevel + hitpointsLevel);
   const melee = 0.325 * (attackLevel + strengthLevel);
-  return Math.floor(base + melee);
+  const ranged = 0.325 * rangedLevel * 1.5;
+  const magic = 0.325 * magicLevel * 1.5;
+
+  return Math.floor(base + Math.max(melee, ranged, magic));
 };

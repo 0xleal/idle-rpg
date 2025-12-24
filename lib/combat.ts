@@ -44,6 +44,16 @@ export function getEffectiveDefence(defenceLevel: number, defenceBonus: number):
   return defenceLevel + 8 + Math.floor(defenceBonus / 4);
 }
 
+// Calculate player's effective ranged (combined accuracy and damage)
+export function getEffectiveRanged(rangedLevel: number, rangedBonus: number): number {
+  return rangedLevel + 8 + Math.floor(rangedBonus / 4);
+}
+
+// Calculate player's effective magic
+export function getEffectiveMagic(magicLevel: number, magicBonus: number): number {
+  return magicLevel + 8 + Math.floor(magicBonus / 4);
+}
+
 // Calculate hit chance (0-1)
 export function calculateHitChance(
   effectiveAttack: number,

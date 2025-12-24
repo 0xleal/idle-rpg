@@ -62,6 +62,7 @@ export interface PlayerState {
   skills: Record<SkillId, SkillState>;
   inventory: Record<string, number>; // itemId -> quantity
   equipment: Partial<Record<import('@/types/equipment').EquipmentSlot, string>>; // slot -> itemId
+  gold: number;
   currentAction: Action | null;
   lastTickTime: number; // for offline progress calculation
 }

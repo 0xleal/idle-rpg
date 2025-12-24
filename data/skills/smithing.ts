@@ -359,4 +359,74 @@ export const FORGING_ACTIONS: SkillingActionDefinition[] = [
   },
 ];
 
-export const SMITHING_ACTIONS = [...SMELTING_ACTIONS, ...FORGING_ACTIONS];
+// Arrowhead forging: bars → arrowheads (15 per bar)
+export const ARROWHEAD_ACTIONS: SkillingActionDefinition[] = [
+  {
+    id: 'forge_bronze_arrowheads',
+    name: 'Bronze Arrowheads',
+    skillId: 'smithing',
+    levelRequired: 5,
+    xp: 12,
+    baseTime: 2500,
+    category: 'arrowheads',
+    inputItems: [{ itemId: 'bronze_bar', quantity: 1 }],
+    itemProduced: { itemId: 'bronze_arrowheads', quantity: 15 },
+  },
+  {
+    id: 'forge_iron_arrowheads',
+    name: 'Iron Arrowheads',
+    skillId: 'smithing',
+    levelRequired: 20,
+    xp: 25,
+    baseTime: 3000,
+    category: 'arrowheads',
+    inputItems: [{ itemId: 'iron_bar', quantity: 1 }],
+    itemProduced: { itemId: 'iron_arrowheads', quantity: 15 },
+  },
+  {
+    id: 'forge_steel_arrowheads',
+    name: 'Steel Arrowheads',
+    skillId: 'smithing',
+    levelRequired: 35,
+    xp: 37,
+    baseTime: 3500,
+    category: 'arrowheads',
+    inputItems: [{ itemId: 'steel_bar', quantity: 1 }],
+    itemProduced: { itemId: 'steel_arrowheads', quantity: 15 },
+  },
+  {
+    id: 'forge_mithril_arrowheads',
+    name: 'Mithril Arrowheads',
+    skillId: 'smithing',
+    levelRequired: 55,
+    xp: 50,
+    baseTime: 4000,
+    category: 'arrowheads',
+    inputItems: [{ itemId: 'mithril_bar', quantity: 1 }],
+    itemProduced: { itemId: 'mithril_arrowheads', quantity: 15 },
+  },
+  {
+    id: 'forge_adamant_arrowheads',
+    name: 'Adamant Arrowheads',
+    skillId: 'smithing',
+    levelRequired: 75,
+    xp: 62,
+    baseTime: 4500,
+    category: 'arrowheads',
+    inputItems: [{ itemId: 'adamant_bar', quantity: 1 }],
+    itemProduced: { itemId: 'adamant_arrowheads', quantity: 15 },
+  },
+  {
+    id: 'forge_rune_arrowheads',
+    name: 'Rune Arrowheads',
+    skillId: 'smithing',
+    levelRequired: 90,
+    xp: 75,
+    baseTime: 5000,
+    category: 'arrowheads',
+    inputItems: [{ itemId: 'rune_bar', quantity: 1 }],
+    itemProduced: { itemId: 'rune_arrowheads', quantity: 15 },
+  },
+];
+
+export const SMITHING_ACTIONS = [...SMELTING_ACTIONS, ...FORGING_ACTIONS, ...ARROWHEAD_ACTIONS];

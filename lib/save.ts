@@ -2,7 +2,7 @@ import { PlayerState, SkillId, Action } from '@/types/game';
 import { EquipmentSlot } from '@/types/equipment';
 
 const SAVE_KEY = 'idle-rpg-save';
-const SAVE_VERSION = 2;
+const SAVE_VERSION = 3;
 
 export interface SaveData {
   version: number;
@@ -10,6 +10,7 @@ export interface SaveData {
   skills: Record<SkillId, { xp: number }>;
   inventory: Record<string, number>;
   equipment: Partial<Record<EquipmentSlot, string>>;
+  gold: number;
   currentAction: Action | null;
 }
 
@@ -23,6 +24,7 @@ export function saveGame(state: PlayerState): void {
     skills: state.skills,
     inventory: state.inventory,
     equipment: state.equipment,
+    gold: state.gold,
     currentAction: state.currentAction,
   };
 

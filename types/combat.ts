@@ -50,4 +50,4 @@ export interface CombatState {
 }
 
 // Combat style determines which skill gets primary XP
-export type CombatStyle = 'attack' | 'strength' | 'defence';
+export type CombatStyle = 'attack' | 'strength' | 'defence' | 'ranged' | 'magic';

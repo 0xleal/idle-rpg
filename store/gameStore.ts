@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { PlayerState, Action, SkillId, ALL_SKILLS, SkillingActionDefinition } from '@/types/game';
 import { EquipmentSlot } from '@/types/equipment';
 import { getEquipment, isEquipment } from '@/data/equipment';
+import { getItem } from '@/data/resources';
 import { SaveData } from '@/lib/save';
 import { levelForXp } from '@/lib/experience';
 
@@ -19,6 +20,7 @@ function createInitialState(): PlayerState {
     skills: createInitialSkills(),
     inventory: {},
     equipment: {},
+    gold: 100, // Start with some gold
     currentAction: null,
     lastTickTime: Date.now(),
   };
@@ -42,6 +44,11 @@ interface GameActions {
   unequipSlot: (slot: EquipmentSlot) => boolean;
   canEquipItem: (itemId: string) => boolean;
   getEquippedItem: (slot: EquipmentSlot) => string | undefined;
+  // Gold & Shop
+  addGold: (amount: number) => void;
+  removeGold: (amount: number) => boolean;
+  buyItem: (itemId: string, price: number, quantity?: number) => boolean;
+  sellItem: (itemId: string, quantity?: number) => boolean;
   // Persistence
   loadFromSave: (saveData: SaveData) => void;
   getPlayerState: () => PlayerState;
@@ -297,6 +304,52 @@ export const useGameStore = create<GameStore>((set, get) => ({
     return state.equipment[slot];
   },
 
+  addGold: (amount) => {
+    set((state) => ({ gold: state.gold + amount }));
+  },
+
+  removeGold: (amount) => {
+    const state = get();
+    if (state.gold < amount) return false;
+    set({ gold: state.gold - amount });
+    return true;
+  },
+
+  buyItem: (itemId, price, quantity = 1) => {
+    const state = get();
+    const totalCost = price * quantity;
+    if (state.gold < totalCost) return false;
+
+    set({
+      gold: state.gold - totalCost,
+      inventory: {
+        ...state.inventory,
+        [itemId]: (state.inventory[itemId] || 0) + quantity,
+      },
+    });
+    return true;
+  },
+
+  sellItem: (itemId, quantity = 1) => {
+    const state = get();
+    const currentQty = state.inventory[itemId] || 0;
+    if (currentQty < quantity) return false;
+
+    const itemDef = getItem(itemId);
+    if (!itemDef?.sellPrice) return false;
+
+    const totalValue = itemDef.sellPrice * quantity;
+
+    set({
+      gold: state.gold + totalValue,
+      inventory: {
+        ...state.inventory,
+        [itemId]: currentQty - quantity,
+      },
+    });
+    return true;
+  },
+
   loadFromSave: (saveData) => {
     // Merge saved skills with initial skills (in case new skills were added)
     const initialSkills = createInitialSkills();
@@ -311,6 +364,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       skills: mergedSkills,
       inventory: saveData.inventory || {},
       equipment: saveData.equipment || {},
+      gold: saveData.gold ?? 100,
       currentAction: saveData.currentAction,
       lastTickTime: saveData.lastSaveTime,
     });
@@ -322,6 +376,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       skills: state.skills,
       inventory: state.inventory,
       equipment: state.equipment,
+      gold: state.gold,
       currentAction: state.currentAction,
       lastTickTime: state.lastTickTime,
     };

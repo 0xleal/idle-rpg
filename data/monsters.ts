@@ -17,6 +17,7 @@ export const MONSTERS: Record<string, Monster> = {
     drops: [
       { itemId: 'raw_chicken', chance: 1, minQuantity: 1, maxQuantity: 1 },
       { itemId: 'feather', chance: 1, minQuantity: 5, maxQuantity: 15 },
+      { itemId: 'bones', chance: 1, minQuantity: 1, maxQuantity: 1 },
     ],
   },
   cow: {
@@ -34,6 +35,7 @@ export const MONSTERS: Record<string, Monster> = {
     drops: [
       { itemId: 'raw_beef', chance: 1, minQuantity: 1, maxQuantity: 1 },
       { itemId: 'cowhide', chance: 1, minQuantity: 1, maxQuantity: 1 },
+      { itemId: 'bones', chance: 1, minQuantity: 1, maxQuantity: 1 },
     ],
   },
 
@@ -53,6 +55,7 @@ export const MONSTERS: Record<string, Monster> = {
     drops: [
       { itemId: 'bronze_dagger', chance: 0.1, minQuantity: 1, maxQuantity: 1 },
       { itemId: 'bronze_helmet', chance: 0.05, minQuantity: 1, maxQuantity: 1 },
+      { itemId: 'bones', chance: 1, minQuantity: 1, maxQuantity: 1 },
     ],
   },
   goblin_warrior: {
@@ -70,6 +73,7 @@ export const MONSTERS: Record<string, Monster> = {
     drops: [
       { itemId: 'bronze_sword', chance: 0.1, minQuantity: 1, maxQuantity: 1 },
       { itemId: 'bronze_platebody', chance: 0.03, minQuantity: 1, maxQuantity: 1 },
+      { itemId: 'bones', chance: 1, minQuantity: 1, maxQuantity: 1 },
     ],
   },
 
@@ -89,6 +93,7 @@ export const MONSTERS: Record<string, Monster> = {
     drops: [
       { itemId: 'iron_sword', chance: 0.05, minQuantity: 1, maxQuantity: 1 },
       { itemId: 'iron_helmet', chance: 0.03, minQuantity: 1, maxQuantity: 1 },
+      { itemId: 'bones', chance: 1, minQuantity: 1, maxQuantity: 1 },
     ],
   },
   skeleton: {
@@ -105,6 +110,7 @@ export const MONSTERS: Record<string, Monster> = {
     xpReward: { attack: 60, strength: 60, defence: 60, hitpoints: 20 },
     drops: [
       { itemId: 'iron_platebody', chance: 0.03, minQuantity: 1, maxQuantity: 1 },
+      { itemId: 'bones', chance: 1, minQuantity: 1, maxQuantity: 1 },
     ],
   },
 
@@ -124,6 +130,7 @@ export const MONSTERS: Record<string, Monster> = {
     drops: [
       { itemId: 'steel_sword', chance: 0.05, minQuantity: 1, maxQuantity: 1 },
       { itemId: 'steel_platebody', chance: 0.02, minQuantity: 1, maxQuantity: 1 },
+      { itemId: 'big_bones', chance: 1, minQuantity: 1, maxQuantity: 1 },
     ],
   },
   moss_giant: {
@@ -141,6 +148,7 @@ export const MONSTERS: Record<string, Monster> = {
     drops: [
       { itemId: 'mithril_sword', chance: 0.03, minQuantity: 1, maxQuantity: 1 },
       { itemId: 'mithril_platebody', chance: 0.01, minQuantity: 1, maxQuantity: 1 },
+      { itemId: 'big_bones', chance: 1, minQuantity: 1, maxQuantity: 1 },
     ],
   },
 
