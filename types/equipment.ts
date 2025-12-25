@@ -1,3 +1,5 @@
+import { SkillId } from './game';
+
 // Equipment slot types
 export type EquipmentSlot =
   | 'head'
@@ -9,7 +11,8 @@ export type EquipmentSlot =
   | 'amulet'
   | 'ring'
   | 'weapon'
-  | 'shield';
+  | 'shield'
+  | 'tool';
 
 export const ALL_EQUIPMENT_SLOTS: EquipmentSlot[] = [
   'head',
@@ -22,6 +25,7 @@ export const ALL_EQUIPMENT_SLOTS: EquipmentSlot[] = [
   'ring',
   'weapon',
   'shield',
+  'tool',
 ];
 
 // Combat stats provided by equipment
@@ -31,6 +35,7 @@ export interface EquipmentStats {
   defenceBonus?: number;
   rangedBonus?: number;
   magicBonus?: number;
+  speedBonus?: number; // 0.1 = 10% faster (for tools)
 }
 
 // Equipment item definition (extends base ItemDefinition)
@@ -42,6 +47,10 @@ export interface EquipmentItem {
   stats: EquipmentStats;
   // Level requirements to equip (combat skills only)
   requirements?: Partial<Record<'attack' | 'strength' | 'defence' | 'ranged' | 'magic', number>>;
+  // For tools: which gathering skill this tool speeds up
+  toolForSkill?: SkillId;
+  // Optional description
+  description?: string;
 }
 
 // Slot display names
@@ -56,4 +65,5 @@ export const SLOT_NAMES: Record<EquipmentSlot, string> = {
   ring: 'Ring',
   weapon: 'Weapon',
   shield: 'Shield',
+  tool: 'Tool',
 };

@@ -1,10 +1,17 @@
 'use client';
 
+import { useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { getItem } from '@/data/resources';
+import { isEquipment } from '@/data/equipment';
+import { ItemDetailModal } from '@/components/ItemDetailModal';
 
 export default function InventoryPage() {
   const inventory = useGameStore((state) => state.inventory);
+  const equipItem = useGameStore((state) => state.equipItem);
+  const sellItem = useGameStore((state) => state.sellItem);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+
   const items = Object.entries(inventory).filter(([, count]) => count > 0);
 
   const totalItems = items.reduce((sum, [, count]) => sum + count, 0);
@@ -57,9 +64,10 @@ export default function InventoryPage() {
             {items.map(([itemId, count], index) => {
               const item = getItem(itemId);
               return (
-                <div
+                <button
                   key={itemId}
-                  className="inventory-slot opacity-0 animate-fade-in"
+                  onClick={() => setSelectedItemId(itemId)}
+                  className="inventory-slot opacity-0 animate-fade-in cursor-pointer hover:border-[var(--accent-gold)] transition-colors"
                   style={{
                     animationDelay: `${index * 0.02}s`,
                     animationFillMode: 'forwards',
@@ -73,11 +81,22 @@ export default function InventoryPage() {
                   <span className="text-sm font-bold text-[var(--text-primary)]">
                     {count.toLocaleString()}
                   </span>
-                </div>
+                </button>
               );
             })}
           </div>
         </>
+      )}
+
+      {/* Item Detail Modal */}
+      {selectedItemId && (
+        <ItemDetailModal
+          itemId={selectedItemId}
+          quantity={inventory[selectedItemId] || 0}
+          onClose={() => setSelectedItemId(null)}
+          onEquip={isEquipment(selectedItemId) ? () => equipItem(selectedItemId) : undefined}
+          onSell={(qty) => sellItem(selectedItemId, qty)}
+        />
       )}
     </div>
   );

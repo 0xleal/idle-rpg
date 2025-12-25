@@ -8,6 +8,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     icon: '🪵',
     stackable: true,
     sellPrice: 1,
+    description: 'A log from a normal tree. Used for fletching and firemaking.',
   },
   oak_log: {
     id: 'oak_log',
@@ -15,6 +16,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     icon: '🪵',
     stackable: true,
     sellPrice: 5,
+    description: 'A sturdy oak log. Better quality for crafting.',
   },
   willow_log: {
     id: 'willow_log',
@@ -22,6 +24,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     icon: '🪵',
     stackable: true,
     sellPrice: 10,
+    description: 'A flexible willow log. Good for making bows.',
   },
   maple_log: {
     id: 'maple_log',
@@ -29,6 +32,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     icon: '🪵',
     stackable: true,
     sellPrice: 25,
+    description: 'A quality maple log. Valued by fletchers.',
   },
   yew_log: {
     id: 'yew_log',
@@ -36,6 +40,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     icon: '🪵',
     stackable: true,
     sellPrice: 50,
+    description: 'A rare yew log. Makes excellent bows.',
   },
 
   // Ores
@@ -45,6 +50,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     icon: '🪨',
     stackable: true,
     sellPrice: 3,
+    description: 'Raw copper ore. Combine with tin to make bronze.',
   },
   tin_ore: {
     id: 'tin_ore',
@@ -52,6 +58,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     icon: '🪨',
     stackable: true,
     sellPrice: 3,
+    description: 'Raw tin ore. Combine with copper to make bronze.',
   },
   iron_ore: {
     id: 'iron_ore',
@@ -59,6 +66,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     icon: '🪨',
     stackable: true,
     sellPrice: 12,
+    description: 'Raw iron ore. Can be smelted into iron bars.',
   },
   coal: {
     id: 'coal',
@@ -66,6 +74,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     icon: '⚫',
     stackable: true,
     sellPrice: 20,
+    description: 'Essential fuel for smelting higher-tier metals.',
   },
   mithril_ore: {
     id: 'mithril_ore',
@@ -73,6 +82,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     icon: '🪨',
     stackable: true,
     sellPrice: 50,
+    description: 'A rare blue-tinged ore with magical properties.',
   },
   adamant_ore: {
     id: 'adamant_ore',
@@ -80,6 +90,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     icon: '🪨',
     stackable: true,
     sellPrice: 80,
+    description: 'An extremely hard green ore.',
   },
   rune_ore: {
     id: 'rune_ore',
@@ -87,6 +98,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     icon: '🪨',
     stackable: true,
     sellPrice: 150,
+    description: 'The rarest ore, infused with runic energy.',
   },
 
   // Gems
@@ -96,6 +108,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     icon: '💎',
     stackable: true,
     sellPrice: 250,
+    description: 'A precious blue gem. Sometimes found while mining.',
   },
   emerald: {
     id: 'emerald',
@@ -103,6 +116,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     icon: '💚',
     stackable: true,
     sellPrice: 500,
+    description: 'A valuable green gem with a deep luster.',
   },
   ruby: {
     id: 'ruby',
@@ -110,6 +124,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     icon: '❤️',
     stackable: true,
     sellPrice: 1000,
+    description: 'A rare crimson gem that glows with inner fire.',
   },
   diamond: {
     id: 'diamond',
@@ -117,6 +132,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     icon: '💠',
     stackable: true,
     sellPrice: 2500,
+    description: 'The rarest gem, harder than any other material.',
   },
 
   // Raw Fish
@@ -402,6 +418,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     stackable: true,
     sellPrice: 5,
     healsFor: 3,
+    description: 'A small but tasty snack. Heals 3 HP.',
   },
   cooked_sardine: {
     id: 'cooked_sardine',
@@ -410,6 +427,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     stackable: true,
     sellPrice: 10,
     healsFor: 4,
+    description: 'A small oily fish. Heals 4 HP.',
   },
   cooked_trout: {
     id: 'cooked_trout',
@@ -418,6 +436,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     stackable: true,
     sellPrice: 25,
     healsFor: 7,
+    description: 'A freshwater fish with mild flavor. Heals 7 HP.',
   },
   cooked_salmon: {
     id: 'cooked_salmon',
@@ -426,6 +445,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     stackable: true,
     sellPrice: 40,
     healsFor: 9,
+    description: 'A rich, pink-fleshed fish. Heals 9 HP.',
   },
   cooked_lobster: {
     id: 'cooked_lobster',
@@ -434,6 +454,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     stackable: true,
     sellPrice: 75,
     healsFor: 12,
+    description: 'A delicious crustacean delicacy. Heals 12 HP.',
   },
   cooked_swordfish: {
     id: 'cooked_swordfish',
@@ -442,6 +463,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     stackable: true,
     sellPrice: 100,
     healsFor: 14,
+    description: 'A meaty steak from a powerful fish. Heals 14 HP.',
   },
   cooked_shark: {
     id: 'cooked_shark',
@@ -450,6 +472,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     stackable: true,
     sellPrice: 175,
     healsFor: 20,
+    description: 'Apex predator turned into a hearty meal. Heals 20 HP.',
   },
 
   // Monster drops
@@ -496,27 +519,114 @@ export const ITEMS: Record<string, ItemDefinition> = {
     sellPrice: 300,
   },
 
-  // Tools
+  // Tools - Axes
   bronze_axe: {
     id: 'bronze_axe',
     name: 'Bronze Axe',
     icon: '🪓',
     stackable: false,
     sellPrice: 25,
+    description: 'A basic axe for chopping trees. 10% speed bonus.',
   },
+  iron_axe: {
+    id: 'iron_axe',
+    name: 'Iron Axe',
+    icon: '🪓',
+    stackable: false,
+    sellPrice: 100,
+    description: 'A sturdy iron axe. 15% speed bonus.',
+  },
+  steel_axe: {
+    id: 'steel_axe',
+    name: 'Steel Axe',
+    icon: '🪓',
+    stackable: false,
+    sellPrice: 250,
+    description: 'A sharp steel axe. 20% speed bonus.',
+  },
+  mithril_axe: {
+    id: 'mithril_axe',
+    name: 'Mithril Axe',
+    icon: '🪓',
+    stackable: false,
+    sellPrice: 500,
+    description: 'A lightweight mithril axe. 25% speed bonus.',
+  },
+  adamant_axe: {
+    id: 'adamant_axe',
+    name: 'Adamant Axe',
+    icon: '🪓',
+    stackable: false,
+    sellPrice: 1000,
+    description: 'A durable adamant axe. 30% speed bonus.',
+  },
+  rune_axe: {
+    id: 'rune_axe',
+    name: 'Rune Axe',
+    icon: '🪓',
+    stackable: false,
+    sellPrice: 2500,
+    description: 'A legendary rune axe. 35% speed bonus.',
+  },
+
+  // Tools - Pickaxes
   bronze_pickaxe: {
     id: 'bronze_pickaxe',
     name: 'Bronze Pickaxe',
     icon: '⛏️',
     stackable: false,
     sellPrice: 25,
+    description: 'A basic pickaxe for mining ores. 10% speed bonus.',
   },
+  iron_pickaxe: {
+    id: 'iron_pickaxe',
+    name: 'Iron Pickaxe',
+    icon: '⛏️',
+    stackable: false,
+    sellPrice: 100,
+    description: 'A sturdy iron pickaxe. 15% speed bonus.',
+  },
+  steel_pickaxe: {
+    id: 'steel_pickaxe',
+    name: 'Steel Pickaxe',
+    icon: '⛏️',
+    stackable: false,
+    sellPrice: 250,
+    description: 'A sharp steel pickaxe. 20% speed bonus.',
+  },
+  mithril_pickaxe: {
+    id: 'mithril_pickaxe',
+    name: 'Mithril Pickaxe',
+    icon: '⛏️',
+    stackable: false,
+    sellPrice: 500,
+    description: 'A lightweight mithril pickaxe. 25% speed bonus.',
+  },
+  adamant_pickaxe: {
+    id: 'adamant_pickaxe',
+    name: 'Adamant Pickaxe',
+    icon: '⛏️',
+    stackable: false,
+    sellPrice: 1000,
+    description: 'A durable adamant pickaxe. 30% speed bonus.',
+  },
+  rune_pickaxe: {
+    id: 'rune_pickaxe',
+    name: 'Rune Pickaxe',
+    icon: '⛏️',
+    stackable: false,
+    sellPrice: 2500,
+    description: 'A legendary rune pickaxe. 35% speed bonus.',
+  },
+
+  // Tools - Fishing
   fishing_rod: {
     id: 'fishing_rod',
     name: 'Fishing Rod',
     icon: '🎣',
     stackable: false,
     sellPrice: 10,
+    description: 'A basic fishing rod. 10% speed bonus.',
   },
   fishing_bait: {
     id: 'fishing_bait',
@@ -524,6 +634,7 @@ export const ITEMS: Record<string, ItemDefinition> = {
     icon: '🪱',
     stackable: true,
     sellPrice: 2,
+    description: 'Live bait for catching fish.',
   },
 
   // Ranged Equipment

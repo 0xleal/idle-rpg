@@ -17,6 +17,13 @@ const SLOT_ICONS: Record<EquipmentSlot, string> = {
   ring: '💍',
   weapon: '⚔️',
   shield: '🛡️',
+  tool: '🔧',
+};
+
+const SKILL_NAMES: Record<string, string> = {
+  woodcutting: 'Woodcutting',
+  mining: 'Mining',
+  fishing: 'Fishing',
 };
 
 export default function EquipmentPage() {
@@ -172,6 +179,11 @@ export default function EquipmentPage() {
                             +{equipDef.stats.magicBonus} Mag
                           </span>
                         )}
+                        {equipDef.stats.speedBonus && equipDef.toolForSkill && (
+                          <span className="stat-bonus" style={{ background: 'rgba(34, 197, 94, 0.15)', color: '#4ade80' }}>
+                            +{Math.round(equipDef.stats.speedBonus * 100)}% {SKILL_NAMES[equipDef.toolForSkill] || equipDef.toolForSkill}
+                          </span>
+                        )}
                       </div>
                     </div>
                   ) : (
@@ -283,6 +295,11 @@ export default function EquipmentPage() {
                     {equip.stats.magicBonus && (
                       <span className="stat-bonus stat-bonus-magic">
                         +{equip.stats.magicBonus} Mag
+                      </span>
+                    )}
+                    {equip.stats.speedBonus && equip.toolForSkill && (
+                      <span className="stat-bonus" style={{ background: 'rgba(34, 197, 94, 0.15)', color: '#4ade80' }}>
+                        +{Math.round(equip.stats.speedBonus * 100)}% {SKILL_NAMES[equip.toolForSkill] || equip.toolForSkill}
                       </span>
                     )}
                   </div>

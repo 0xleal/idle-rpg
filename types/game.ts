@@ -76,6 +76,8 @@ export interface ItemDefinition {
   sellPrice?: number;
   // For food items - how much HP it heals
   healsFor?: number;
+  // Short description for item detail modal
+  description?: string;
 }
 
 // Input requirement for crafting

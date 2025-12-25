@@ -65,9 +65,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   ...createInitialState(),
 
   startAction: (definition) => {
+    const state = get();
+
     // Check if player has required inputs (if any)
     if (definition.inputItems && definition.inputItems.length > 0) {
-      const state = get();
       for (const req of definition.inputItems) {
         const have = state.inventory[req.itemId] || 0;
         if (have < req.quantity) {
@@ -77,11 +78,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
     }
 
+    // Calculate speed bonus from equipped tool
+    let speedMultiplier = 1.0;
+    const equippedToolId = state.equipment.tool;
+    if (equippedToolId) {
+      const tool = getEquipment(equippedToolId);
+      if (tool?.toolForSkill === definition.skillId && tool.stats.speedBonus) {
+        speedMultiplier = 1 - tool.stats.speedBonus;
+      }
+    }
+    const adjustedDuration = Math.round(definition.baseTime * speedMultiplier);
+
     const action: Action = {
       type: 'skilling',
       skillId: definition.skillId,
       actionId: definition.id,
-      duration: definition.baseTime,
+      duration: adjustedDuration,
       elapsedMs: 0,
       xpReward: definition.xp,
       itemReward: definition.itemProduced,

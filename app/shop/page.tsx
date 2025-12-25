@@ -4,10 +4,12 @@ import { useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { SHOPS } from '@/data/shops';
 import { getItem } from '@/data/resources';
+import { ItemDetailModal } from '@/components/ItemDetailModal';
 
 export default function ShopPage() {
   const [selectedShopId, setSelectedShopId] = useState<string>('general');
   const [buyQuantity, setBuyQuantity] = useState<Record<string, number>>({});
+  const [previewItemId, setPreviewItemId] = useState<string | null>(null);
 
   const gold = useGameStore((state) => state.gold);
   const inventory = useGameStore((state) => state.inventory);
@@ -114,7 +116,10 @@ export default function ShopPage() {
                       animationFillMode: 'forwards',
                     }}
                   >
-                    <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setPreviewItemId(shopItem.itemId)}
+                      className="flex items-center gap-3 text-left hover:opacity-80 transition-opacity"
+                    >
                       <span className="text-2xl">{item.icon}</span>
                       <div>
                         <div className="font-medium text-[var(--text-primary)]">
@@ -124,7 +129,7 @@ export default function ShopPage() {
                           {shopItem.buyPrice} gold
                         </div>
                       </div>
-                    </div>
+                    </button>
                     <div className="flex items-center gap-2">
                       <select
                         value={qty}
@@ -225,6 +230,15 @@ export default function ShopPage() {
           )}
         </div>
       </div>
+
+      {/* Item Preview Modal */}
+      {previewItemId && (
+        <ItemDetailModal
+          itemId={previewItemId}
+          onClose={() => setPreviewItemId(null)}
+          showActions={false}
+        />
+      )}
     </div>
   );
 }

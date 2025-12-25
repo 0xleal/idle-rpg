@@ -17,9 +17,14 @@ export const SHOPS: Shop[] = [
     name: 'General Store',
     icon: '🏪',
     items: [
-      // Basic tools and supplies
+      // Axes (Woodcutting tools)
       { itemId: 'bronze_axe', buyPrice: 50, stock: null },
+      { itemId: 'iron_axe', buyPrice: 200, stock: null },
+      { itemId: 'steel_axe', buyPrice: 500, stock: null },
+      // Pickaxes (Mining tools)
       { itemId: 'bronze_pickaxe', buyPrice: 50, stock: null },
+      { itemId: 'iron_pickaxe', buyPrice: 200, stock: null },
+      { itemId: 'steel_pickaxe', buyPrice: 500, stock: null },
     ],
   },
   {
